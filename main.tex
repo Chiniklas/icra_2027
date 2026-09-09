@@ -1,0 +1,106 @@
+% !TeX program = pdflatex
+% !TeX root = main.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ICRA 2027 paper skeleton, organized like reference/RAL_dexsafedagger.
+
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+
+% Core writing, math, figure, and table packages. Add specialized packages only
+% when the paper needs them; this keeps the submission easier to reproduce.
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs,multirow,tabularx}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{url}
+
+% PaperCept prefers Acrobat 5 / PDF 1.4 compatibility.
+\pdfminorversion=4
+\pdfobjcompresslevel=0
+
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
+
+% Project macros: rename the method once here and use \methodname throughout.
+\newcommand{\methodname}{MethodName\xspace}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
+\newcommand{\secref}[1]{Sec.~\ref{#1}}
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+\newcommand{\etal}{\emph{et al.}\xspace}
+
+% Keep this true for review. Set it false only for a version where ICRA
+% explicitly requests identities, such as the camera-ready paper.
+\newif\ificraanonymous
+\icraanonymoustrue
+
+\title{\LARGE \bfseries
+  A Descriptive Title for Your Robotics Paper
+}
+
+\ificraanonymous
+  % Preserve the template's byline spacing without exposing author identity.
+  \author{\vphantom{Author Names}\\\vphantom{Author Affiliations}}
+\else
+  \author{First Author$^{1}$ and Second Author$^{2}$%
+    \thanks{$^{1}$First Author is with the Department of Robotics,
+      Example University, City, Country.
+      {\tt\small first.author@example.edu}}%
+    \thanks{$^{2}$Second Author is with Example Robotics Laboratory,
+      City, Country.
+      {\tt\small second.author@example.org}}%
+  }
+\fi
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+\begin{abstract}
+State the problem, the proposed approach, the principal quantitative result,
+and the broader significance of the work. Keep the abstract self-contained.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+\input{01_introduction}
+
+\section{Related Work}
+\label{sec:related_work}
+\input{02_related_work}
+
+\section{Problem Statement and Method}
+\label{sec:method}
+\input{03_methods}
+
+\section{Experiments}
+\label{sec:experiments}
+\input{04_experiments}
+
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+\input{05_conclusion}
+
+% Uncomment if an appendix is permitted and fits within the page limit.
+% \appendix
+% \input{06_appendix}
+
+% Keep acknowledgments out of anonymous review if they reveal identity.
+\ificraanonymous
+\else
+  \section*{Acknowledgment}
+  Add funding and non-author contributions here. Disclose reportable use of
+  generative AI according to the current IEEE-RAS policy.
+\fi
+
+{\small
+  \bibliographystyle{IEEEtran}
+  \bibliography{main}
+}
+
+\end{document}

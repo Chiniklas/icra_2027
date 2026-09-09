@@ -1,0 +1,14 @@
+/.latex-build/
+/main.pdf
+/main.pdf.tmp
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.lof
+*.lot

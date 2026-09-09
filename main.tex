@@ -9,14 +9,20 @@
 % when the paper needs them; this keeps the submission easier to reproduce.
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,bm}
+\usepackage{algorithm,algorithmic}
 \usepackage{booktabs,multirow,tabularx}
+\usepackage{capt-of}
 \usepackage{cite}
 \usepackage{graphicx}
 \usepackage{microtype}
 \usepackage{siunitx}
+\usepackage{tikz}
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage{url}
+\usetikzlibrary{arrows.meta,positioning}
+
+\graphicspath{{figures/}}
 
 % PaperCept prefers Acrobat 5 / PDF 1.4 compatibility.
 \pdfminorversion=4
@@ -35,7 +41,7 @@
 % Keep this true for review. Set it false only for a version where ICRA
 % explicitly requests identities, such as the camera-ready paper.
 \newif\ificraanonymous
-\icraanonymoustrue
+\icraanonymousfalse
 
 \title{\LARGE \bfseries
   A Descriptive Title for Your Robotics Paper
@@ -45,25 +51,43 @@
   % Preserve the template's byline spacing without exposing author identity.
   \author{\vphantom{Author Names}\\\vphantom{Author Affiliations}}
 \else
-  \author{First Author$^{1}$ and Second Author$^{2}$%
-    \thanks{$^{1}$First Author is with the Department of Robotics,
-      Example University, City, Country.
-      {\tt\small first.author@example.edu}}%
-    \thanks{$^{2}$Second Author is with Example Robotics Laboratory,
-      City, Country.
-      {\tt\small second.author@example.org}}%
-  }
+  \author{Chi Zhang, Carsten Oertel, Lei Zhang, Zhenshan Bing, and Alois Knoll}
 \fi
+
+% Match the reference paper's page-one structure: title, a full-width teaser,
+% then the two-column abstract and introduction. Replace only the placeholder
+% drawing/caption when the paper's core story is settled.
+\newcommand{\teasercaption}{%
+  \textbf{Overview of \methodname.}
+  Replace this sentence with a one- or two-sentence explanation of the problem,
+  the central idea, and the headline result shown in the teaser.}
+
+\makeatletter
+\let\icra@originalmaketitle\@maketitle
+\renewcommand{\@maketitle}{%
+  \icra@originalmaketitle
+  \begin{center}
+    \resizebox{\linewidth}{!}{\input{figures/teaser_placeholder}}
+    \captionof{figure}{\teasercaption}
+    \label{fig:teaser}
+    \vspace{-0.12in}
+  \end{center}%
+}
+\makeatother
 
 \begin{document}
 
 \maketitle
+% ieeeconf measures the custom title block more than once; normalize the teaser
+% counter so the next figure is Fig. 2.
+\setcounter{figure}{1}
 \thispagestyle{empty}
 \pagestyle{empty}
 
 \begin{abstract}
 State the problem, the proposed approach, the principal quantitative result,
-and the broader significance of the work. Keep the abstract self-contained.
+and the broader significance of the work. Keep the abstract self-contained and
+avoid citations, undefined abbreviations, and claims not supported in the paper.
 \end{abstract}
 
 \section{Introduction}

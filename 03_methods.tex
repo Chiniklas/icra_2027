@@ -1,4 +1,13 @@
 % !TeX root = main.tex
+\begin{figure*}[t]
+  \centering
+  \resizebox{\linewidth}{!}{\input{figures/pipeline_placeholder}}
+  \caption{Placeholder for the full method or system pipeline. Replace each
+    block with a meaningful stage, show the direction of data flow, and explain
+    train-time versus deployment-time components in the caption.}
+  \label{fig:pipeline}
+\end{figure*}
+
 \subsection{Problem Formulation}
 
 Define the task, assumptions, and notation before describing the method. For a
@@ -13,4 +22,13 @@ equations by label, as in~\eqref{eq:dynamics}.
 \subsection{Approach}
 
 Describe enough implementation detail for another researcher to reproduce
-\methodname. Move secondary derivations to concise prose when space is limited.
+\methodname. Use \figref{fig:pipeline} to give the high-level flow before
+introducing individual components.
+
+\subsection{Core Components}
+
+Give each novel component its own paragraph or subsection. For every component,
+state its inputs, outputs, training signal, and role in the complete system.
+Move secondary derivations to concise prose when space is limited.
+
+\input{alg/algorithm_template}

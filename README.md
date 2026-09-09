@@ -35,6 +35,11 @@ packages are required at build time because `ieeeconf.cls` is vendored here.
 - `figures/`, `table/`, and `alg/` hold reusable paper components.
 - `build-paper.sh` performs a clean, atomic PDF publication to `main.pdf`.
 
+The starter includes clearly labeled vector placeholders for the page-one
+teaser, the full-width method pipeline, an algorithm, and a results table. They
+follow the attached reference paper's information hierarchy without reusing its
+technical content or claims.
+
 Leave `\icraanonymoustrue` enabled for review. Only switch it to
 `\icraanonymousfalse` and fill in author details when the conference requests a
 non-anonymous version. Check acknowledgments, PDF metadata, repository links,

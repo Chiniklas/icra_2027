@@ -1,0 +1,26 @@
+% Full-width method/pipeline placeholder. Replace with a PDF figure when ready.
+\begin{tikzpicture}[
+  font=\footnotesize,
+  module/.style={
+    draw=black!55,
+    rounded corners=2pt,
+    minimum height=0.58in,
+    text width=0.16\textwidth,
+    align=center,
+    inner sep=5pt
+  },
+  flow/.style={-{Latex[length=2mm]}, line width=0.75pt, draw=black!70},
+  feedback/.style={-{Latex[length=2mm]}, dashed, line width=0.7pt, draw=black!60}
+]
+  \node[module, fill=blue!7] (input) {\textbf{Inputs}\\Observations, state, or demonstrations};
+  \node[module, fill=orange!8, right=0.32in of input] (representation) {\textbf{Representation}\\Encoder or state estimator};
+  \node[module, fill=orange!8, right=0.32in of representation] (method) {\textbf{Proposed module}\\Core technical contribution};
+  \node[module, fill=orange!8, right=0.32in of method] (decision) {\textbf{Decision}\\Policy, planner, or controller};
+  \node[module, fill=green!8, right=0.32in of decision] (output) {\textbf{Outputs}\\Actions and evaluation signals};
+
+  \draw[flow] (input) -- (representation);
+  \draw[flow] (representation) -- (method);
+  \draw[flow] (method) -- (decision);
+  \draw[flow] (decision) -- (output);
+  \draw[feedback] (output.south) -- ++(0,-0.22) -| (method.south);
+\end{tikzpicture}

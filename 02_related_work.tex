@@ -1,29 +1,83 @@
 % !TeX root = main.tex
-\textbf{Dexterous Threading.}
-Nut threading is a representative contact-rich assembly task that requires
-precise alignment, compliant interaction, and closed-loop correction under
-uncertain contact. FORGE~\cite{noseworthy2025forge} learns force-aware policies
-in simulation using a force-threshold mechanism and dynamics randomization, and
-demonstrates robust sim-to-real transfer on nut threading as part of a
-multistage planetary-gear assembly. Its primary focus is robust contact search
-under pose and dynamics uncertainty. In contrast, we study long-horizon cyclic
-threading, where limited robot motion requires repeated rotation, release,
-collision-free return, and re-engagement while preventing errors from
-accumulating across cycles.
+\textbf{Contact-Rich Dexterous Manipulation and Sim-to-Real Transfer.}
+Precise, contact-rich assembly requires closed-loop correction under uncertain
+and only partially observed contact. A now-standard recipe learns force-aware
+policies in simulation and transfers them to hardware through dynamics
+randomization~\cite{tobin2017domain}. Factory~\cite{narang2022factory} makes
+this tractable for tight-clearance assembly by simulating contact with discrete,
+voxel-based signed-distance fields (SDFs) and a contact-reduction scheme,
+providing the fast, stable interaction dynamics that force-based policies
+depend on. Building on such simulators, FORGE~\cite{noseworthy2025forge}
+conditions a policy on an interpretable force threshold and demonstrates robust
+sim-to-real transfer on contact search, including single-stage nut threading,
+under substantial pose uncertainty. Parallel efforts scale dexterous, vision-
+based manipulation to multi-fingered hands and humanoids through automated
+real-to-sim tuning and hybrid object representations~\cite{lin2025recipe},
+object-centric goal-conditioned RL for zero-shot tool use~\cite{simtoolreal},
+and large-scale visuomotor grasping~\cite{dextrahrgb}. A recurring obstacle,
+however, is \emph{simulation exploitation}: when extended to dexterous assets,
+residual inaccuracies in contact and friction modeling let a policy satisfy its
+reward by exploiting non-physical simulator artifacts rather than learning
+transferable behavior. Dexscrew~\cite{dexscrew} confronts this issue most
+directly and is the closest prior work to ours: it learns nut-screwing skills
+that remain effective despite imperfect simulation. It addresses the screwing
+skill in isolation with a fixed hand, however, whereas \methodname{} targets
+long-horizon, cyclic threading with a fully actuated multi-fingered dexterous
+hand mounted on a repositioning arm, and we adopt Dexscrew as our primary point
+of comparison. More broadly, \methodname{} inherits SDF-based contact simulation
+and force-regulated interaction but deliberately restricts the teacher to a
+\emph{simplified} simulation that preserves threading-relevant contact while
+reducing the surface area for such exploitation, and it targets the
+\emph{long-horizon, cyclic} regime rather than a single contact episode.
 
-\textbf{Policy Chaining.}
-Long-horizon manipulation is often made tractable by decomposing a task into
-shorter skills and explicitly managing the transitions between them.
-Sequential Dexterity~\cite{chen2023sequential} chains reinforcement-learning
-policies for dexterous manipulation using a learned transition-feasibility
-function. The function supports progressive fine-tuning of the constituent
-policies as well as autonomous switching for recovery and the omission of
-redundant stages. SimThreadReal instead addresses a cyclic contact-rich task in
-which the same threading behavior must be repeatedly interleaved with release
-and return. We exploit this structure through learned release timing and a
-collision-free state-machine-based return motion, and subsequently distill the
-complete chain into a reactive vision-based student policy.
+\textbf{Long-Horizon Manipulation and Policy Architecture.}
+Extending short contact skills to long horizons exposes a fundamental
+limitation of autoregressive policies: errors compound. Under closed-loop
+execution the state distribution visited at test time drifts away from the
+training distribution, and this covariate shift degrades performance
+super-linearly with horizon length---the classical result motivating
+interactive imitation learning~\cite{ross2011reduction}. Two broad strategies
+respond to this challenge. The first decomposes the task and manages
+transitions explicitly: Sequential Dexterity~\cite{chen2023sequential} chains
+multiple dexterous RL sub-policies with a learned transition-feasibility
+function that fine-tunes adjacent policies for compatible hand-off states and
+enables autonomous switching for recovery. This modularity is powerful but
+introduces multi-network training overhead, hand-crafted or learned transition
+boundaries, and boundary failures at each hand-off---costs that recur every
+cycle in a repetitive task. The second strategy retains a single model and
+attacks drift at its source, for example by distilling simulator structure into
+world models that support long-horizon planning and rapid real-world
+adaptation~\cite{simdist}. \methodname{} follows the single-policy philosophy:
+rather than learning a set of distinct sub-policies and a transition function
+between them, we roll out one reactive policy inside a state machine that, upon
+reaching a rotation threshold, executes a guided open-and-return to the initial
+opened configuration and re-invokes the \emph{same} policy in the same
+environment. This scripted repetition---not a learned inter-policy
+transition---generates the long-horizon demonstrations, which we then compress
+into a single continuous student policy, so no discrete policy switching occurs
+at deployment.
 
-\textbf{Third research area.}
-Add a final theme only when it is necessary to position a distinct component
-of the method. End with the relationship to this paper, not a generic summary.
+\textbf{Policy Distillation and Generative Trajectory Modeling.}
+Distilling a privileged teacher, trained with information unavailable on
+hardware, into a perception-limited student is an established route to
+sim-to-real transfer~\cite{chen2020cheating}. The expressiveness of the student
+determines how faithfully it can reproduce complex, multi-modal expert
+behavior. Diffusion policies model the action distribution as an iterative
+denoising process and capture multi-modality that unimodal regression
+misses~\cite{chi2023diffusion}, and 3D variants such as DP3 show that a compact
+point-cloud representation yields sample-efficient, generalizable visuomotor
+policies~\cite{ze2024dp3}. Flow matching~\cite{lipman2023flow} generalizes and
+simplifies this family: it trains a continuous normalizing flow by regressing
+the vector field of a conditional probability path, and, with
+optimal-transport or rectified paths~\cite{liu2023rectified}, learns nearly
+straight trajectories between noise and data that permit fast, few-step ODE
+integration. These properties---multi-modal expressiveness, straight vector
+fields, and efficient sampling---make flow matching an attractive backbone for
+reactive robot policies, as recent vision-language-action models
+demonstrate~\cite{black2024pi0}. For sim-to-real transfer specifically, the
+choice of observation representation governs robustness to embodiment and
+viewpoint shift~\cite{wilcox2025adapt3r}. \methodname{} unifies these threads:
+we distill a privileged, force-aware simulation teacher into a flow-matching
+student conditioned on a DP3 visual latent and force feedback, using the
+straightness and multi-modality of the learned vector field to represent an
+entire long-horizon cyclic trajectory distribution in a single reactive network.

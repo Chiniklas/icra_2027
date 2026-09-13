@@ -1,46 +1,103 @@
 % !TeX root = main.tex
-Threading is a fundamental operation in robotic assembly, maintenance, and
-disassembly~\cite{siciliano2016springer}. Although humans can readily rotate a
-nut while maintaining its engagement with a mating thread, autonomous
-execution remains challenging.
-Threading requires the robot to regulate motion through sustained contact under
-tight geometric tolerances, uncertain friction, and only partially observed
-interaction forces. Small pose errors can cause slipping, jamming, or
-cross-threading, while excessive force can damage the workpiece. These coupled
-perception, control, and contact constraints make controlled threading one of
-the most difficult contact-rich manipulation tasks.
+Multi-fingered, contact-rich manipulation over long execution horizons remains
+one of the open frontiers of real-world robotics~\cite{siciliano2016springer}.
+Tasks such as threading a nut onto a bolt are effortless for humans yet expose
+the full difficulty of autonomous dexterity: the robot must regulate motion
+through sustained contact under tight geometric tolerances, uncertain friction,
+and only partially observed interaction forces. Small pose errors cause
+slipping, jamming, or cross-threading, while excessive force damages the
+workpiece. These tightly coupled perception, control, and contact constraints
+make controlled threading one of the most demanding contact-rich manipulation
+problems, and its difficulty is compounded when a dexterous hand, rather than a
+parallel gripper, must coordinate many degrees of freedom to sustain
+engagement.
 
-The difficulty becomes more pronounced over long horizons. Because the motion
-range of a gripper or robot wrist is limited, completing a threading operation
-requires a cyclic sequence of partial rotations, timely release, collision-free
-return, and re-engagement. An error in any cycle changes the initial condition
-of the next, so small deviations can accumulate until the task fails. Purely
-scripted trajectories cannot react to these deviations, whereas a monolithic
-learned policy must discover both fine contact behavior and long-horizon phase
-transitions. A practical solution should therefore combine a reactive policy
-for controlled threading with an explicit mechanism for reliably chaining the
-policy across many cycles.
+The difficulty grows sharply over long horizons. Because the reachable rotation
+of a wrist or hand is bounded, a single continuous turn cannot fully seat a nut;
+the operation instead requires a \emph{cyclic} sequence of partial rotations,
+timely release, collision-free return, and re-engagement, repeated until the nut
+is fully threaded. This cyclic structure is what turns a short-horizon contact
+skill into a long-horizon task: the terminal state of each cycle is the initial
+condition of the next, so a small deviation in one rotation perturbs contact in
+the following one. Under closed-loop autoregressive execution such deviations
+accumulate, driving the policy toward out-of-distribution states from which
+recovery is unlikely---the compounding-error, or covariate-shift, failure mode
+that is well understood in imitation learning~\cite{ross2011reduction}. Purely
+scripted trajectories cannot react to these deviations, while a monolithic
+learned policy must simultaneously discover fine contact behavior and the
+long-horizon phase transitions that stitch cycles together.
 
-We introduce \methodname, a framework for long-horizon cyclic threading that
-combines learned reactive control with structured policy chaining, as shown in
-\figref{fig:teaser}. We first train teacher policies in a simplified simulation
-that preserves the contact interactions needed for threading while reducing
-irrelevant complexity. We then chain the learned behavior using a release-time
-criterion and a state-machine-based scripted return motion designed to remain
-collision-free. Finally, we distill the chained teacher behavior into a
-vision-based student policy. The student uses a DP3 vision head to encode the
-scene and is trained from collected teacher demonstrations using flow-matching
-imitation learning.
+Sim-to-real reinforcement learning with privileged information has become the
+dominant recipe for short-horizon contact-rich skills. High-fidelity contact
+simulators built on signed-distance-field (SDF) collision
+representations~\cite{narang2022factory} enable stable, fast simulation of tight
+assembly, and force-aware policies trained under dynamics randomization transfer
+robustly to hardware for tasks including insertion, gear meshing, and single
+nut threading~\cite{noseworthy2025forge}. However, these successes are largely
+confined to short contact episodes. When the same recipe is scaled to complex
+dexterous assets and long horizons, two failure modes emerge. First, residual
+gaps in contact and friction modeling let a reinforcement-learning agent
+\emph{exploit} simulator inaccuracies rather than learn behavior that survives
+the sim-to-real gap---a pathology observed precisely in dexterous nut
+screwing~\cite{dexscrew}. Second, the trajectory drift described above turns
+otherwise reliable per-cycle policies into unreliable long-horizon ones.
+
+The conventional remedy for long horizons is \emph{policy chaining}:
+decomposing the task into discrete sub-skills and learning to transition between
+them. Sequential Dexterity~\cite{chen2023sequential}, the representative
+approach, chains several reinforcement-learning sub-policies using a learned
+transition-feasibility function. This modular design is expressive, but it
+carries structural costs that are particularly acute for a cyclic task: it
+requires training and maintaining multiple networks, hand-designing or learning
+the transition boundaries between them, and absorbing the boundary failures and
+execution latency that arise whenever control is handed from one sub-policy to
+the next. For a task whose sub-skills are nearly identical and must repeat many
+times, replicating this discrete machinery per cycle is both wasteful and a new
+source of compounding boundary error.
+
+We argue that the cyclic structure of threading is better captured by a single
+\emph{continuous} generative policy than by a chain of discrete ones. We
+introduce \methodname, a framework that distills a privileged simulation
+teacher into a unified vision-and-force flow-matching student for long-horizon
+cyclic threading (\figref{fig:teaser}). We first train a reactive teacher in a
+simplified simulation that preserves the SDF-based contact interactions
+essential to threading while removing irrelevant complexity, giving the teacher
+access to privileged state, contact forces, and exact geometry. Because a single
+reachable rotation is bounded, we generate long-horizon demonstrations by rolling
+out this \emph{single} reactive teacher inside a state machine: the policy
+threads until a rotation threshold is reached, a guided open-and-return motion
+then resets the hand to its initial opened configuration, and the same policy is
+re-invoked to thread the next increment in the same environment. Repeating this
+cycle produces arbitrarily long demonstrations without ever switching between
+distinct learned sub-policies. We then distill these long-horizon rollouts into a
+single student policy that replaces privileged state with a DP3 point-cloud
+vision head~\cite{ze2024dp3} and force feedback, and that models the full cyclic
+trajectory distribution with flow-matching imitation
+learning~\cite{lipman2023flow}. Flow matching is well suited to this setting:
+it regresses a straight, deterministic velocity field between noise and expert
+actions, yielding a multi-modal yet efficient trajectory generator that captures
+long-horizon behavior in a single network. Crucially, the deployed student is
+\emph{one} continuous policy---it reproduces the entire multi-cycle chain
+without switching between discrete sub-networks at runtime, so it avoids the
+inter-policy boundary failures and latency of explicit chaining while remaining
+reactive to contact.
 
 The main contributions of this work are:
 \begin{itemize}
-  \item a controlled-threading framework that couples a reactive learned policy
-    with explicit release timing and a collision-free return state machine for
-    long-horizon cyclic execution;
-  \item a teacher-to-student training pipeline that combines simplified
-    simulation, a DP3 visual representation, and flow-matching imitation
-    learning; and
-  \item an evaluation across M24, M30, and M36 nuts with hexagonal, octagonal,
-    rectangular, and round geometries, using maximum cycle count, threading
-    tracking error, and success rate to assess robustness and generalization.
+  \item \textbf{System and task.} A hardware platform and benchmark for
+    long-horizon cyclic nut threading on a 7-DoF arm equipped with a
+    multi-fingered dexterous hand, exercising force-regulated contact over many
+    rotation--release--return--re-engage cycles.
+  \item \textbf{Privileged flow-matching distillation.} A teacher-to-student
+    pipeline that trains a privileged reactive teacher in a simplified
+    SDF-contact simulation and distills its long-horizon behavior into a single
+    flow-matching policy, rather than a chain of learned sub-policies.
+  \item \textbf{Cross-modal sim-to-real integration.} A student policy that
+    substitutes a DP3 visual-latent representation and force feedback for the
+    teacher's privileged simulation state, transferring contact-rich behavior to
+    the real world without runtime policy switching.
+  \item \textbf{Empirical validation.} An evaluation across M24, M30, and M36
+    nuts with hexagonal, octagonal, rectangular, and round geometries, reporting
+    maximum cycle count, threading tracking error, and success rate to quantify
+    robustness and generalization.
 \end{itemize}

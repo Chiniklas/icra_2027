@@ -1,29 +1,80 @@
 % !TeX root = main.tex
 \subsection{Evaluation Metrics}
 
-Define each metric mathematically or operationally before reporting results.
-Specify whether higher or lower values are better and how trials are aggregated.
+We evaluate performance using two complementary metrics.
+
+\paragraph{Maximum Cycle Count}
+The maximum cycle count is the largest number of consecutive task cycles
+completed before failure; higher values indicate better long-horizon
+robustness.
+
+\paragraph{Threading Tracking Error}
+The threading tracking error measures the deviation of the observed thread from
+its desired trajectory during execution; lower values indicate more accurate
+tracking.
 
 \subsection{Experimental Setup}
 
-State the research questions, baselines, datasets or hardware, metrics, and
-evaluation protocol. Report uncertainty and the number of trials where
-appropriate.
+We evaluate the proposed method in both simulation and on real hardware using
+the metrics defined above. For each setting, report the evaluation protocol,
+number of trials, and uncertainty.
 
-\subsection{Baselines and Implementation Details}
+\subsubsection{Simulation}
 
-Explain why each baseline is relevant, how hyperparameters were selected, and
-which compute, simulator, sensors, datasets, or robot hardware were used.
+Describe the simulator, task configuration, environment parameters, baselines,
+and domain randomization used for evaluation. State how the simulated trials
+are initialized and when a trial is considered complete or failed.
+
+\subsubsection{Real Hardware}
+
+Describe the robot platform, sensors, control frequency, workspace, task setup,
+and safety measures. The hardware evaluation uses a family of test nuts in
+three sizes---M24, M30, and M36. Each size has four geometric variations:
+hexagonal, octagonal, rectangular, and round. Specify the number of trials for
+each size--geometry combination, the success and failure criteria, and any
+differences from the simulation setup.
+
+\subsection{Ablations}
+
+We compare five policy-learning variants while keeping the architecture,
+dataset budget, evaluation protocol, and all unrelated settings fixed.
+
+\paragraph{Behavior Cloning}
+Train the student policy using supervised behavior cloning on the initially
+collected teacher demonstrations only.
+
+\paragraph{Online DAgger}
+Iteratively execute the current student policy, query the teacher online for
+corrective actions on visited states, aggregate the new samples, and retrain the
+student policy.
+
+\paragraph{Offline DAgger}
+Train on a fixed, pre-collected dataset that includes teacher corrections for
+states visited by an intermediate student policy, without additional online
+interaction during final training.
+
+\paragraph{Online Flow Matching}
+Apply the flow-matching imitation objective while collecting teacher-labeled
+states through online student rollouts and iterative dataset aggregation.
+
+\paragraph{Ours}
+Evaluate the complete proposed distillation method with its intended data
+collection procedure and flow-matching imitation objective.
 
 \subsection{Quantitative Results}
 
-\input{table/example_results}
+\input{table/maximum_cycle_count}
 
-Interpret the comparison instead of repeating table entries. Tie every central
-claim to a figure, table, or statistical test.
+\input{table/thread_tracking_error}
+
+\input{table/success_rate}
+
+Interpret the three comparisons instead of repeating table entries. Discuss
+maximum cycle count, threading tracking error, and success rate together, and tie
+every central claim to the corresponding table or statistical test.
 
 \subsection{Qualitative and Real-World Results}
 
 Use vector figures (PDF) when possible, and ensure plot text remains legible at
 the final column width. Discuss failure cases rather than reporting only the
-best outcomes in \tabref{tab:results}.
+best outcomes in the quantitative tables.

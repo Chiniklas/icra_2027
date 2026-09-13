@@ -19,16 +19,63 @@ state $\mathbf{x}_t$ and control $\mathbf{u}_t$, a generic discrete-time model i
 where $\boldsymbol{\varepsilon}_t$ denotes process uncertainty. Refer to
 equations by label, as in~\eqref{eq:dynamics}.
 
-\subsection{Approach}
+\subsection{Teacher Policy Training}
 
-Describe enough implementation detail for another researcher to reproduce
-\methodname. Use \figref{fig:pipeline} to give the high-level flow before
-introducing individual components.
+Use \figref{fig:pipeline} to situate teacher policy training within the complete
+\methodname pipeline.
 
-\subsection{Core Components}
+\subsubsection{Simplified Simulation}
 
-Give each novel component its own paragraph or subsection. For every component,
-state its inputs, outputs, training signal, and role in the complete system.
-Move secondary derivations to concise prose when space is limited.
+Describe the simplified simulation environment used to train the teacher
+policies, including its state and action spaces, dynamics, task setup, and the
+assumptions or abstractions that distinguish it from the target environment.
+
+\subsubsection{Reinforcement Learning Recipe}
+
+Describe the teacher policy architecture, observations and actions, reward
+function, reinforcement learning objective, optimization procedure, and other
+training details needed to reproduce the teacher policies.
+
+\subsection{Policy Chaining}
+
+Explain how individual teacher policies are connected into a complete task
+sequence through release timing and a scripted return motion.
+
+\subsubsection{Release Timing}
+
+Describe how the release time is selected, including the state conditions or
+policy signals that trigger release and how the timing enables a successful
+transition to the subsequent skill.
+
+\subsubsection{Collision-Free Scripted Return Motion}
+
+Describe the state machine used to execute the scripted return motion after
+release. Specify its states, transition conditions, and safety checks, and
+explain how the resulting trajectory remains collision-free while returning
+the robot to the initial state required by the next policy.
+
+\subsection{Student Policy Distillation}
+
+Describe how the chained teacher policy is distilled into a vision-based
+student policy.
+
+\subsubsection{DP3 Vision Head}
+
+Describe how the DP3 vision head encodes the visual observation, how its output
+is fused with the robot state, and how the resulting representation conditions
+the student policy.
+
+\subsubsection{Dataset Collection}
+
+Describe how demonstrations are collected from the chained teacher policy,
+including the recorded observations and actions, rollout conditions, dataset
+size and composition, and any filtering or balancing procedure.
+
+\subsubsection{Flow-Matching Imitation Learning}
+
+Define the conditional flow-matching objective used to imitate the teacher
+demonstrations. Specify the action representation, noise and time sampling,
+conditioning inputs, training procedure, and inference-time integration used to
+generate student actions.
 
 \input{alg/algorithm_template}

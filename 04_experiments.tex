@@ -36,7 +36,7 @@ differences from the simulation setup.
 
 \subsection{Ablations}
 
-We compare five policy-learning variants while keeping the architecture,
+We compare four policy-learning variants while keeping the architecture,
 dataset budget, evaluation protocol, and all unrelated settings fixed.
 
 \paragraph{Behavior Cloning}
@@ -52,10 +52,6 @@ student policy.
 Train on a fixed, pre-collected dataset that includes teacher corrections for
 states visited by an intermediate student policy, without additional online
 interaction during final training.
-
-\paragraph{Online Flow Matching}
-Apply the flow-matching imitation objective while collecting teacher-labeled
-states through online student rollouts and iterative dataset aggregation.
 
 \paragraph{Ours}
 Evaluate the complete proposed distillation method with its intended data

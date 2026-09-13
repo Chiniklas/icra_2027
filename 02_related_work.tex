@@ -1,12 +1,28 @@
 % !TeX root = main.tex
-\textbf{First research area.}
-Summarize the literature most directly connected to the task, grouping papers
-by technical idea instead of listing them chronologically.
+\textbf{Dexterous Threading.}
+Nut threading is a representative contact-rich assembly task that requires
+precise alignment, compliant interaction, and closed-loop correction under
+uncertain contact. FORGE~\cite{noseworthy2025forge} learns force-aware policies
+in simulation using a force-threshold mechanism and dynamics randomization, and
+demonstrates robust sim-to-real transfer on nut threading as part of a
+multistage planetary-gear assembly. Its primary focus is robust contact search
+under pose and dynamics uncertainty. In contrast, we study long-horizon cyclic
+threading, where limited robot motion requires repeated rotation, release,
+collision-free return, and re-engagement while preventing errors from
+accumulating across cycles.
 
-\textbf{Second research area.}
-Explain how the proposed work differs from the closest prior approaches. Make
-the unresolved limitation precise enough to motivate the method in
-\secref{sec:method}.
+\textbf{Policy Chaining.}
+Long-horizon manipulation is often made tractable by decomposing a task into
+shorter skills and explicitly managing the transitions between them.
+Sequential Dexterity~\cite{chen2023sequential} chains reinforcement-learning
+policies for dexterous manipulation using a learned transition-feasibility
+function. The function supports progressive fine-tuning of the constituent
+policies as well as autonomous switching for recovery and the omission of
+redundant stages. SimThreadReal instead addresses a cyclic contact-rich task in
+which the same threading behavior must be repeatedly interleaved with release
+and return. We exploit this structure through learned release timing and a
+collision-free state-machine-based return motion, and subsequently distill the
+complete chain into a reactive vision-based student policy.
 
 \textbf{Third research area.}
 Add a final theme only when it is necessary to position a distinct component

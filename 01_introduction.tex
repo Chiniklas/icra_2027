@@ -1,15 +1,46 @@
 % !TeX root = main.tex
-Introduce the robotics problem and explain why it matters. Establish the gap
-between prior work and the capability developed in this paper. A standard
-robotics reference can be cited as in~\cite{siciliano2016springer}.
+Threading is a fundamental operation in robotic assembly, maintenance, and
+disassembly~\cite{siciliano2016springer}. Although humans can readily rotate a
+nut while maintaining its engagement with a mating thread, autonomous
+execution remains challenging.
+Threading requires the robot to regulate motion through sustained contact under
+tight geometric tolerances, uncertain friction, and only partially observed
+interaction forces. Small pose errors can cause slipping, jamming, or
+cross-threading, while excessive force can damage the workpiece. These coupled
+perception, control, and contact constraints make controlled threading one of
+the most difficult contact-rich manipulation tasks.
 
-Use the next paragraph to narrow from the broad problem to the precise failure
-mode or missing capability addressed by this work. Connect the motivation to
-the visual overview in \figref{fig:teaser}.
+The difficulty becomes more pronounced over long horizons. Because the motion
+range of a gripper or robot wrist is limited, completing a threading operation
+requires a cyclic sequence of partial rotations, timely release, collision-free
+return, and re-engagement. An error in any cycle changes the initial condition
+of the next, so small deviations can accumulate until the task fails. Purely
+scripted trajectories cannot react to these deviations, whereas a monolithic
+learned policy must discover both fine contact behavior and long-horizon phase
+transitions. A practical solution should therefore combine a reactive policy
+for controlled threading with an explicit mechanism for reliably chaining the
+policy across many cycles.
 
-End the introduction with concrete contributions. For example:
+We introduce \methodname, a framework for long-horizon cyclic threading that
+combines learned reactive control with structured policy chaining, as shown in
+\figref{fig:teaser}. We first train teacher policies in a simplified simulation
+that preserves the contact interactions needed for threading while reducing
+irrelevant complexity. We then chain the learned behavior using a release-time
+criterion and a state-machine-based scripted return motion designed to remain
+collision-free. Finally, we distill the chained teacher behavior into a
+vision-based student policy. The student uses a DP3 vision head to encode the
+scene and is trained from collected teacher demonstrations using flow-matching
+imitation learning.
+
+The main contributions of this work are:
 \begin{itemize}
-  \item a method that addresses the stated technical limitation;
-  \item an evaluation protocol that tests the relevant hypotheses; and
-  \item experimental evidence that quantifies the improvement and its limits.
+  \item a controlled-threading framework that couples a reactive learned policy
+    with explicit release timing and a collision-free return state machine for
+    long-horizon cyclic execution;
+  \item a teacher-to-student training pipeline that combines simplified
+    simulation, a DP3 visual representation, and flow-matching imitation
+    learning; and
+  \item an evaluation across M24, M30, and M36 nuts with hexagonal, octagonal,
+    rectangular, and round geometries, using maximum cycle count, threading
+    tracking error, and success rate to assess robustness and generalization.
 \end{itemize}

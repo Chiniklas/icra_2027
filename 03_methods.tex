@@ -61,25 +61,26 @@ demonstrated action-chunk distribution into a single visuomotor policy.
 
 \subsection{Privileged Teacher Policy Training}
 
-\subsubsection{Helical-Constraint Thread Simulation}
-To avoid resolving individual thread contacts, we model the engaged nut--bolt
-pair with a helical constraint. Let $b_k$ denote the start of a turn,
-$\varphi(\mathbf{x}_t;\mathbf{x}_{b_k})$ the unwrapped, direction-corrected nut
-rotation, $z^n$ its axial position, and $\rho$ the thread pitch. The constraint
-is
+\subsubsection{Simplified Thread Simulation}
+To avoid resolving individual thread contacts, we represent the engaged
+nut--bolt pair using coaxial revolute and prismatic joints. Let $b_k$ denote
+the reference state at the beginning of a turn,
+$\varphi(\mathbf{x}_t;\mathbf{x}_{b_k})$ the unwrapped,
+direction-corrected nut rotation, and $\rho$ the thread pitch. The measured
+rotation determines the axial-drive target
 \begin{equation}
-  z^n_t-z^n_{b_k}=-\frac{\rho}{2\pi}
+  z^{n,*}_t = z^n_{b_k} - \frac{\rho}{2\pi}
   \varphi(\mathbf{x}_t;\mathbf{x}_{b_k}).
   \label{eq:screw_constraint}
 \end{equation}
-Thus, one revolution advances the nut by one pitch. With
-$k=\rho/(2\pi)$, the constraint Jacobian
-$\mathbf{J}_h=[1\;k]$ projects its scalar reaction $\lambda_h$ into the axial
-force and turning torque,
-$[f_z\;\tau_\varphi]^\top=\mathbf{J}_h^\top\lambda_h$; equivalently,
-$|\tau_\varphi|=k|f_z|$. This projection preserves the transmission of axial
-resistance into turning torque while retaining a computationally efficient
-thread model.
+Thus, one revolution changes the target axial position by one thread pitch. A
+position-controlled prismatic joint tracks this target, while a passive
+revolute joint permits nut rotation. Let $\omega_t$ denote the nut's angular
+velocity about the bolt axis. We model rotational resistance using smoothed
+Coulomb and viscous friction,
+$\bar{\tau}_{f,t}=-\tau_c\tanh(\omega_t/\omega_s)-c_v\omega_t$, where $\tau_c$
+is the Coulomb friction torque, $c_v$ is the viscous damping coefficient, and
+$\omega_s$ is the smoothing speed.
 
 \subsubsection{PPO Training}
 We train the privileged teacher using an asymmetric actor--critic architecture.

@@ -15,40 +15,44 @@ tracking.
 
 \subsection{Experimental Setup}
 
-We evaluate the proposed method in both simulation and on real hardware using
-the metrics defined above. Our platform comprises a seven-DoF Franka Research
-3 (FR3) arm equipped with an Inspire Hand RH56DFX. Its simulated counterpart is
-implemented in NVIDIA Isaac Sim~5.1.0 with Isaac Lab~2.2.1 and is used for
-privileged teacher training, hybrid demonstration generation, and evaluation
-before real-world transfer. The simulated and physical systems use the same
-task geometry and OSC action interface.
+We simulate a seven-DoF Franka Research~3 (FR3) arm equipped with an Inspire
+Hand RH56DFX using Isaac Sim~5.1.0 and Isaac Lab~2.2.1. The 9-D action space
+encodes a six-DoF OSC target and three index--thumb joint commands. At
+\SI{15}{Hz},
+the student converts a calibrated $320\times180$ depth image into 4096 cropped
+points and fuses a 64-dimensional DP3 feature with proprioception, progress,
+and phase; physics runs at \SI{120}{Hz}. For the retained M24 run, we train the
+PPO teacher for 200 epochs in 512 environments and collect 20 successful
+ten-cycle demonstrations (19,486 frames) from 32 environments, with 30 random
+arm impulses per demonstration. We train the flow-matching student for 300
+epochs using eight-step action chunks. All stages use one GPU.
 
-In both settings, the student converts depth observations into cropped point
-clouds and discards RGB. An Intel RealSense D415 supplies the physical RGB-D
-stream. Real-world evaluation covers three nut sizes---M24, M30, and
-M36---and four geometries per size: hexagonal, octagonal, rectangular, and
-round.
-
-% TODO: Validate and report the GPU, number of parallel environments, control
-% and policy frequencies, camera calibration/resolution/frame rate,
-% domain-randomization ranges, workspace and safety limits, trial counts,
-% initialization distributions, and success/failure criteria.
+% TODO: Validate and report the GPU model, wall-clock training times,
+% domain-randomization ranges, initialization distributions, and the final
+% multi-object training/data budgets used for the paper.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/simulation_scene_placeholder.png}
-  \caption{Simulation scene used for evaluation. Replace this placeholder with
-    a representative view of the simulated robot, workspace, and threading
-    task.}
+  \caption{Simulated robot, workspace, and threading task.}
   \label{fig:simulation_scene}
 \end{figure}
+
+The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
+Intel RealSense D415 supplies the student's depth observations through the same
+OSC interface used in simulation. Teacher and student training uses only
+hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in distribution and
+hold out the octagonal, rectangular, and round variants of each size for
+out-of-distribution evaluation.
+
+% TODO: Validate and report the control and policy frequencies, camera
+% calibration/resolution/frame rate, workspace and safety limits, trial counts,
+% initialization distributions, and success/failure criteria.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
-  \caption{Full family of nuts, bolts, and holders used in the real-hardware
-    experiments. Replace this placeholder with a photograph showing all test
-    objects and their geometric variations.}
+  \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
   \label{fig:hardware_family}
 \end{figure}
 

@@ -1,16 +1,28 @@
 \begin{table}[htbp]
-  \caption{Maximum cycle count for each nut size and geometry. Higher is
-    better. Replace dashes with measured values.}
-  \label{tab:maximum_cycle_count}
+  \makeatletter
+  \begingroup
+  \long\def\@makecaption#1#2{%
+    \noindent\footnotesize #1:\enspace #2\par
+    \@IEEEtablecaptionsepspace}
+  \caption{Long-horizon, flow-matching, and real-data ablations on the M24
+    hexagonal nut over 10 trials. Maximum cycles is the mean per-trial maximum; mean
+    cyclic error uses successful cycles only; and ten-cycle error compares
+    their accumulated rotation with the $600^\circ$ target. Errors are signed
+    in degrees: negative denotes lagging and positive denotes overshooting.}
+  \label{tab:m24_ablation}
+  \endgroup
+  \makeatother
   \centering
-  \begin{tabular}{lccc}
+  \begin{tabular}{@{}lccc@{}}
     \toprule
-    Geometry & M24 & M30 & M36 \\
+    Method & \shortstack{Max. cycles\\$\uparrow$}
+      & \shortstack{Mean cyclic\\tracking error}
+      & \shortstack{10-cycle\\tracking error} \\
     \midrule
-    Hexagonal  & -- & -- & -- \\
-    Octagonal  & -- & -- & -- \\
-    Rectangular & -- & -- & -- \\
-    Round      & -- & -- & -- \\
+    Single-cycle student & 5.2 & -4.56 & -311.71 \\
+    Action-chunk BC      & 0 & -- & -- \\
+    Ours (sim data only)      & 2.1 & -10.07 & -495.15 \\
+    \textbf{Ours}         & 10 & -4.21 & -42.10 \\
     \bottomrule
   \end{tabular}
 \end{table}

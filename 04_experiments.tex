@@ -16,23 +16,41 @@ tracking.
 \subsection{Experimental Setup}
 
 We evaluate the proposed method in both simulation and on real hardware using
-the metrics defined above. For each setting, report the evaluation protocol,
-number of trials, and uncertainty.
+the metrics defined above. Our platform comprises a seven-DoF Franka Research
+3 (FR3) arm equipped with an Inspire Hand RH56DFX. Its simulated counterpart is
+implemented in NVIDIA Isaac Sim~5.1.0 with Isaac Lab~2.2.1 and is used for
+privileged teacher training, hybrid demonstration generation, and evaluation
+before real-world transfer. The simulated and physical systems use the same
+task geometry and OSC action interface.
 
-\subsubsection{Simulation}
+In both settings, the student converts depth observations into cropped point
+clouds and discards RGB. An Intel RealSense D415 supplies the physical RGB-D
+stream. Real-world evaluation covers three nut sizes---M24, M30, and
+M36---and four geometries per size: hexagonal, octagonal, rectangular, and
+round.
 
-Describe the simulator, task configuration, environment parameters, baselines,
-and domain randomization used for evaluation. State how the simulated trials
-are initialized and when a trial is considered complete or failed.
+% TODO: Validate and report the GPU, number of parallel environments, control
+% and policy frequencies, camera calibration/resolution/frame rate,
+% domain-randomization ranges, workspace and safety limits, trial counts,
+% initialization distributions, and success/failure criteria.
 
-\subsubsection{Real Hardware}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/simulation_scene_placeholder.png}
+  \caption{Simulation scene used for evaluation. Replace this placeholder with
+    a representative view of the simulated robot, workspace, and threading
+    task.}
+  \label{fig:simulation_scene}
+\end{figure}
 
-Describe the robot platform, sensors, control frequency, workspace, task setup,
-and safety measures. The hardware evaluation uses a family of test nuts in
-three sizes---M24, M30, and M36. Each size has four geometric variations:
-hexagonal, octagonal, rectangular, and round. Specify the number of trials for
-each size--geometry combination, the success and failure criteria, and any
-differences from the simulation setup.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
+  \caption{Full family of nuts, bolts, and holders used in the real-hardware
+    experiments. Replace this placeholder with a photograph showing all test
+    objects and their geometric variations.}
+  \label{fig:hardware_family}
+\end{figure}
 
 \subsection{Ablations}
 
@@ -54,8 +72,9 @@ states visited by an intermediate student policy, without additional online
 interaction during final training.
 
 \paragraph{Ours}
-Evaluate the complete proposed distillation method with its intended data
-collection procedure and flow-matching imitation objective.
+Train once on the fixed dataset of hybrid-expert demonstrations and offline
+human corrections using the proposed flow-matching imitation objective; no
+student rollouts or online relabeling are used during training.
 
 \subsection{Quantitative Results}
 

@@ -9,9 +9,7 @@
     align=center,
     inner sep=5pt
   },
-  flow/.style={-{Latex[length=2mm]}, line width=0.75pt, draw=black!72},
-  feedback/.style={-{Latex[length=2mm]}, dashed, line width=0.7pt,
-    draw=black!55}
+  flow/.style={-{Latex[length=2mm]}, line width=0.75pt, draw=black!72}
 ]
   \node[module, fill=blue!7] (sim)
     {\textbf{Reduced contact model}\\$\mathbf{x}_{t+1}=F(\mathbf{x}_t,\mathbf{a}_t,\boldsymbol\xi_t)$};
@@ -22,18 +20,20 @@
   \node[module, fill=yellow!12, right=0.20in of hybrid] (data)
     {\textbf{Aligned rollouts}\\$\mathcal D=\{\mathbf{o}_t,p_t,\mathbf{e}_{m_t},\mathbf{U}_t\}$};
   \node[module, fill=green!9, right=0.20in of data] (condition)
-    {\textbf{Student condition}\\$\mathbf{v}_t=E_{\rm DP3}(I,D)$\\$\mathbf{c}_t=\Phi(\mathbf{v}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$};
+    {\textbf{Student condition}\\$\mathbf{v}_t=E_{\rm DP3}(\mathcal P(D))$\\$\mathbf{c}_t=\Phi(\mathbf{v}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$};
   \node[module, fill=green!9, right=0.20in of condition] (student)
     {\textbf{Flow student}\\$\dot{\mathbf{x}}=v_\theta(\mathbf{x},\lambda\mid\mathbf{c}_t)$\\$\widehat{\mathbf{U}}_t\in\mathbb R^{H\times9}$};
+  \node[draw=black!58, rounded corners=2pt, fill=red!7,
+    below=0.18in of data, text width=0.135\textwidth, align=center,
+    inner sep=4pt] (human)
+    {\textbf{Offline human correction}\\failed real-world segments};
 
   \draw[flow] (sim) -- (turn);
   \draw[flow] (turn) -- (hybrid);
   \draw[flow] (hybrid) -- (data);
   \draw[flow] (data) -- (condition);
   \draw[flow] (condition) -- (student);
-  \draw[feedback] (student.south) -- ++(0,-0.22) -|
-    node[pos=0.73,below,align=center] {optional student-state\\aggregation $(\beta<1)$}
-    (hybrid.south);
+  \draw[flow] (human.north) -- (data.south);
   \draw[flow] (student.north) -- ++(0,0.20)
     node[above,align=center] {closed-loop cyclic execution\\(student actions only)};
 \end{tikzpicture}

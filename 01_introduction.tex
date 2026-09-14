@@ -28,8 +28,16 @@ arm--hand control.
 We study controlled nut--bolt threading under moderate resistance, where a
 pinch grasp and coordinated arm--hand manipulation are required. The robot must
 repeatedly approach, grasp, rotate, release, return, and re-engage, making the
-task inherently cyclic and long-horizon. We evaluate threading accuracy in both
-simulation and real-world experiments.
+task inherently cyclic and long-horizon. We first attempted to train a unified
+teacher policy for the complete multi-cycle task. In practice, however,
+designing rewards that capture both long-horizon progress and precise
+transitions between phases proved exceedingly difficult. We therefore adopt a
+three-level hierarchy. At the lowest level, a learned teacher executes the
+elemental turning motion. At the middle level, scripted transitions chain these
+turns into complete simulated trajectories, which are corrected during
+real-world replay through human intervention. At the highest level, a student
+policy distills these demonstrations into a single deployable policy. We
+evaluate threading accuracy in both simulation and real-world experiments.
 
 The main contributions of this work are:
 \begin{itemize}

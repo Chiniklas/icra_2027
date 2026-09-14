@@ -2,80 +2,207 @@
 \begin{figure*}[t]
   \centering
   \resizebox{\linewidth}{!}{\input{figures/pipeline_placeholder}}
-  \caption{Placeholder for the full method or system pipeline. Replace each
-    block with a meaningful stage, show the direction of data flow, and explain
-    train-time versus deployment-time components in the caption.}
+  \caption{Abstract training and execution pipeline. A privileged policy
+    supplies contact-rich turning behavior, while an event-driven controller
+    supplies release and return behavior. Their commands are mapped into one
+    phase-independent action space and collected offline with synchronized
+    visual and proprioceptive observations. Human interventions replace failed
+    real-world segments before the dataset is fixed. Conditional flow matching
+    then distills the combined demonstrations into one student. The student
+    does not act during data collection; at evaluation, both expert and human
+    commands are removed and the student controls every phase.}
   \label{fig:pipeline}
 \end{figure*}
 
 \subsection{Problem Formulation}
 
-Define the task, assumptions, and notation before describing the method. For a
-state $\mathbf{x}_t$ and control $\mathbf{u}_t$, a generic discrete-time model is
+Given a fixed dataset of simulated-teacher demonstrations augmented with
+human interventions, our goal is to learn a student distribution over future
+action sequences. We formulate this as conditional flow matching:
 \begin{equation}
-  \mathbf{x}_{t+1} = f(\mathbf{x}_t, \mathbf{u}_t) + \boldsymbol{\varepsilon}_t,
-  \label{eq:dynamics}
+  \begin{aligned}
+  \theta^*=\arg\min_\theta\;&
+  \mathbb E\!\left[
+    \left\|v_\theta(\mathbf U_t^\lambda,\lambda\mid\mathbf c_t)
+    -\dot{\mathbf U}_t^\lambda\right\|_2^2
+  \right],\\
+  \text{s.t.}\quad
+  &\mathbf U_t^\lambda
+    =(1-\lambda)\mathbf U_t^0+\lambda\mathbf U_t^D,\\
+  &\dot{\mathbf U}_t^\lambda=\mathbf U_t^D-\mathbf U_t^0,
+  \end{aligned}
+  \label{eq:imitation_objective}
 \end{equation}
-where $\boldsymbol{\varepsilon}_t$ denotes process uncertainty. Refer to
-equations by label, as in~\eqref{eq:dynamics}.
+where the expectation is over
+$(\mathbf y_t,\mathbf U_t^D)\sim\mathcal D$,
+$\mathbf U_t^0\sim\mathcal N(\mathbf0,\mathbf I)$, and
+$\lambda\sim\mathcal U[0,1]$. Here,
+$\mathcal D=\mathcal D_{\mathrm{sim}}\cup\mathcal D_{\mathrm H}$ is a fixed
+offline dataset of simulated hybrid-teacher episodes and human interventions.
+Each condition $\mathbf y_t$ contains a depth observation, proprioception, task
+progress, and phase information, and is encoded as $\mathbf c_t$. Its target
+$\mathbf U_t^D\in\mathbb R^{H\times9}$ is an $H$-step demonstrated action
+sequence. The learned velocity field transports Gaussian noise to the
+conditional action distribution $p_\theta(\mathbf U_t\mid\mathbf y_t)$; the
+student never acts during data collection.
 
-\subsection{Teacher Policy Training}
+\subsection{Overview of the Distillation Pipeline}
 
-Use \figref{fig:pipeline} to situate teacher policy training within the complete
-\methodname pipeline.
+As shown in \figref{fig:pipeline}, the proposed pipeline comprises three stages.
+First, we train a privileged turning policy in simulation and combine it with
+scripted release, return, and re-engagement motions to construct a hybrid
+teacher. Second, we use the hybrid teacher to generate complete cyclic
+demonstrations in simulation and replay the resulting trajectories on the real
+system. A human operator intervenes whenever a grasp failure is anticipated.
+We consolidate the simulated and human-corrected real-world demonstrations
+into a fixed offline dataset. Third, we encode the student's depth and
+proprioceptive observations and use conditional flow matching to distill the
+demonstrated action-chunk distribution into a single visuomotor policy.
 
-\subsubsection{Simplified Simulation}
+\subsection{Privileged Teacher Policy Training}
 
-Describe the simplified simulation environment used to train the teacher
-policies, including its state and action spaces, dynamics, task setup, and the
-assumptions or abstractions that distinguish it from the target environment.
+\subsubsection{Simplified Thread Simulation}
+To avoid resolving individual thread contacts, we represent the engaged
+nut--bolt pair using coaxial revolute and prismatic joints. Let $b_k$ denote
+the reference state at the beginning of a turn,
+$\varphi(\mathbf{x}_t;\mathbf{x}_{b_k})$ the unwrapped,
+direction-corrected nut rotation, and $\rho$ the thread pitch. The measured
+rotation determines the axial-drive target
+\begin{equation}
+  z^{n,*}_t = z^n_{b_k} - \frac{\rho}{2\pi}
+  \varphi(\mathbf{x}_t;\mathbf{x}_{b_k}).
+  \label{eq:screw_constraint}
+\end{equation}
+Thus, one revolution changes the target axial position by one thread pitch. A
+position-controlled prismatic joint tracks this target, while a passive
+revolute joint permits nut rotation. Let $\omega_t$ denote the nut's angular
+velocity about the bolt axis. We model rotational resistance using smoothed
+Coulomb and viscous friction,
+$\bar{\tau}_{f,t}=-\tau_c\tanh(\omega_t/\omega_s)-c_v\omega_t$, where $\tau_c$
+is the Coulomb friction torque, $c_v$ is the viscous damping coefficient, and
+$\omega_s$ is the smoothing speed.
 
-\subsubsection{Reinforcement Learning Recipe}
+\subsubsection{PPO Training}
+We train the privileged teacher using an asymmetric actor--critic architecture.
+The actor observation $\mathbf{z}^{\pi}_t\in\mathcal{Z}^{\pi}$ contains robot
+proprioception, bolt-relative task state, and a one-hot object identifier
+$\mathbf{e}_{\mathrm{obj}}$. This identifier conditions a single teacher on the
+active nut--bolt variant. The critic receives the augmented observation
+$\mathbf{z}^{V}_t=[\mathbf{z}^{\pi}_t,\mathbf{z}^{\mathrm{priv}}_t]$,
+where $\mathbf{z}^{\mathrm{priv}}_t$ contains additional simulator-only object
+and contact state. The actor uses an LSTM backbone to encode its observation
+history into a recurrent state $\mathbf{h}_t$, allowing it to retain recent
+contact and motion information across a turn. It outputs a normalized action
+$\mathbf{a}_t\in\mathcal{A}=[-1,1]^9$ that jointly commands the arm end effector
+and hand. Inspired by FORGE~\cite{noseworthy2025forge}, the arm component
+specifies a bounded end-effector target in the bolt-relative frame, which is
+tracked by an operational-space impedance controller. On the real robot, this
+representation maps directly to the Franka arm's native Cartesian-impedance
+interface; a fixed action interface applies the required scaling and filtering. The critic
+$V_\psi(\mathbf{z}^{V}_t)$ uses its additional information to improve value and
+advantage estimation, but this information is not passed to the actor. The
+resulting recurrent policy
+$\pi_T(\mathbf{a}\mid\mathbf{z}^{\pi},\mathbf{h})$ is optimized with PPO. Its
+shaped return separates acquisition, progress, terminal accuracy, and
+regularization,
+\begin{equation}
+  \begin{aligned}
+  r_t={}&w_g r_g(\mathbf{x}_t)
+      +w_\varphi[\varphi_t-\varphi_{t-1}]_+
+      +w_*r_*(\mathbf{x}_t)\\
+      &-w_a\|\mathbf{a}_t\|_2^2
+      -w_\Delta\|\mathbf{a}_t-\mathbf{a}_{t-1}\|_2^2,
+  \end{aligned}
+  \label{eq:teacher_reward}
+\end{equation}
+with the standard clipped surrogate
+\begin{equation}
+  \begin{aligned}
+  \mathcal{L}_{\mathrm{PPO}}
+  &=-\mathbb{E}_t\!\left[
+    \min\!\left(\rho_t(\vartheta)\widehat A_t,
+    \bar\rho_t(\vartheta)\widehat A_t\right)\right],\\
+  \bar\rho_t(\vartheta)
+  &=\operatorname{clip}(\rho_t(\vartheta),1-\epsilon,1+\epsilon),\\
+  \rho_t(\vartheta)
+  &=\frac{\pi_\vartheta(\mathbf{a}_t\mid\mathbf{z}^{\pi}_t,\mathbf{h}_t)}
+       {\pi_{\vartheta_{\mathrm{old}}}(\mathbf{a}_t\mid
+        \mathbf{z}^{\pi}_t,\mathbf{h}_t)}.
+  \end{aligned}
+  \label{eq:ppo_objective}
+\end{equation}
+Only the deterministic actor mean
+$\bar\pi_T(\mathbf{z}^{\pi}_t,\mathbf{h}_t)$ is used during demonstration
+generation; the critic is discarded after training.
 
-Describe the teacher policy architecture, observations and actions, reward
-function, reinforcement learning objective, optimization procedure, and other
-training details needed to reproduce the teacher policies.
+\subsection{Human-in-the-Loop Hybrid Teacher Construction}
 
-\subsection{Policy Chaining}
+\subsubsection{Cyclic Teacher Rollout in Simulation}
+In simulation, we combine the learned turning policy with scripted release,
+collision-free return, and re-engagement motions. Let
+$m_t\in\mathcal{M}_E=\{T,W_1,\ldots,W_J,R\}$ denote the turning phase, release
+and return waypoints, and re-engagement. The hybrid teacher is
+\begin{equation}
+  \pi_E(\mathbf{x}_t,m_t)=
+  \begin{cases}
+    \bar\pi_T(\mathbf{z}^{\pi}_t,\mathbf{h}_t), & m_t=T,\\
+    \boldsymbol\kappa_{m_t}(\mathbf{x}_t), & m_t\neq T,
+  \end{cases}
+  \label{eq:hybrid_expert}
+\end{equation}
+where $\boldsymbol\kappa_{m_t}$ is the scripted controller for the active
+transition phase; both branches use the same filtered, bolt-relative OSC action
+space. Release is triggered when the target rotation $\varphi_{\mathrm{tar}}$
+($60^\circ$ in our experiments) is reached while a valid opposed-finger grasp
+is maintained for a short dwell period. The fingers then open to a safe
+clearance, after which scripted arm--hand waypoints return to the initial grasp
+pose and re-engage the nut. The turning reference is updated at re-engagement,
+but the physical nut is not reset, producing complete multi-cycle
+demonstrations.
 
-Explain how individual teacher policies are connected into a complete task
-sequence through release timing and a scripted return motion.
+\subsubsection{Human Intervention During Real-World Trajectory Replay}
+We replay simulated trajectories on the real system through the same OSC
+interface. When slip or misalignment is anticipated, an operator replaces the
+replayed teacher actions until a stable grasp is recovered. These human actions
+overwrite the corresponding teacher actions in the trajectory, and the
+resulting corrected trajectory is recorded as a real-world demonstration.
 
-\subsubsection{Release Timing}
-
-Describe how the release time is selected, including the state conditions or
-policy signals that trigger release and how the timing enables a successful
-transition to the subsequent skill.
-
-\subsubsection{Collision-Free Scripted Return Motion}
-
-Describe the state machine used to execute the scripted return motion after
-release. Specify its states, transition conditions, and safety checks, and
-explain how the resulting trajectory remains collision-free while returning
-the robot to the initial state required by the next policy.
+Before training, we combine simulated rollouts and human-corrected replays into
+a fixed offline dataset of depth observations, proprioception, normalized task
+progress, phase encodings, and executed commands. The student never acts during
+collection. We mask chunks that cross physical resets, retain phase boundaries,
+and pad terminal chunks with the final valid command.
 
 \subsection{Student Policy Distillation}
+\label{sec:flow_distillation}
 
-Describe how the chained teacher policy is distilled into a vision-based
-student policy.
+Student learning is posed as supervised imitation from the fixed dataset of
+simulated hybrid-teacher and human-corrected demonstrations. At time $t$, the
+student observes
+$\mathbf{y}_t=(\mathbf{D}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$
+and learns the distribution of the executed $H$-step action chunk. Unlike
+interactive DAgger, the student never acts during collection and is trained
+only after the dataset is complete.
 
-\subsubsection{DP3 Vision Head}
+Following DP3~\cite{ze2024dp3}, we discard RGB and reconstruct a point cloud
+$\mathcal{P}_t$ from depth using the camera intrinsics. The vision head takes
+the cropped, normalized point cloud as input and applies a shared pointwise
+encoder followed by symmetric max pooling to produce a visual feature
+$\mathbf{v}_t$. This feature is fused with proprioception, task progress, and
+phase information to form the policy condition $\mathbf{c}_t$.
 
-Describe how the DP3 vision head encodes the visual observation, how its output
-is fused with the robot state, and how the resulting representation conditions
-the student policy.
-
-\subsubsection{Dataset Collection}
-
-Describe how demonstrations are collected from the chained teacher policy,
-including the recorded observations and actions, rollout conditions, dataset
-size and composition, and any filtering or balancing procedure.
-
-\subsubsection{Flow-Matching Imitation Learning}
-
-Define the conditional flow-matching objective used to imitate the teacher
-demonstrations. Specify the action representation, noise and time sampling,
-conditioning inputs, training procedure, and inference-time integration used to
-generate student actions.
+The supervision target is the executed action chunk
+$\mathbf{U}_t^D=[\mathbf{u}^D_t,\ldots,\mathbf{u}^D_{t+H-1}]
+\in\mathbb{R}^{H\times9}$. For Gaussian noise $\mathbf{U}_t^0$ and interpolation
+time $\lambda$, Eq.~\eqref{eq:imitation_objective} constructs
+$\mathbf{U}_t^\lambda$ and the supervision velocity
+$\dot{\mathbf{U}}_t^\lambda=\mathbf{U}_t^D-\mathbf{U}_t^0$. We optimize
+\begin{equation}
+  \mathcal{L}(\theta)
+  =\mathbb{E}\!\left[\left\|
+  v_\theta(\mathbf{U}_t^\lambda,\lambda\mid\mathbf{c}_t)
+  -\dot{\mathbf{U}}_t^\lambda\right\|_2^2\right].
+  \label{eq:flow_objective}
+\end{equation}
 
 \input{alg/algorithm_template}

@@ -1,46 +1,59 @@
 % !TeX root = main.tex
-Threading is a fundamental operation in robotic assembly, maintenance, and
-disassembly~\cite{siciliano2016springer}. Although humans can readily rotate a
-nut while maintaining its engagement with a mating thread, autonomous
-execution remains challenging.
-Threading requires the robot to regulate motion through sustained contact under
-tight geometric tolerances, uncertain friction, and only partially observed
-interaction forces. Small pose errors can cause slipping, jamming, or
-cross-threading, while excessive force can damage the workpiece. These coupled
-perception, control, and contact constraints make controlled threading one of
-the most difficult contact-rich manipulation tasks.
+Threading a nut onto a bolt is among the most difficult tasks in robotic
+assembly. Yet humans perform it with apparent ease by adapting their grasp to
+the nut size and threading resistance: a loose nut can be spun with a single
+finger, increasing reaction torque may prompt a switch to a pinch grasp, and a
+large or tight nut may require a tripod or power grasp. This flexibility
+requires continuous coordination of grasp selection, applied torque, and task
+progress.
 
-The difficulty becomes more pronounced over long horizons. Because the motion
-range of a gripper or robot wrist is limited, completing a threading operation
-requires a cyclic sequence of partial rotations, timely release, collision-free
-return, and re-engagement. An error in any cycle changes the initial condition
-of the next, so small deviations can accumulate until the task fails. Purely
-scripted trajectories cannot react to these deviations, whereas a monolithic
-learned policy must discover both fine contact behavior and long-horizon phase
-transitions. A practical solution should therefore combine a reactive policy
-for controlled threading with an explicit mechanism for reliably chaining the
-policy across many cycles.
+Existing methods make dexterous screwing tractable by adding substantial
+structure to the problem. DexScrew replaces explicit thread geometry with a
+revolute-joint proxy to learn a rotational finger gait, then uses the learned
+skill to assist teleoperation and collect real-world demonstrations for tactile
+behavior cloning~\cite{dexscrew}. However, the resulting policy achieves only
+uncontrolled spinning: it sustains rotation but neither accepts a target
+rotation or thread position nor determines when that target has been reached.
+It therefore cannot terminate precisely, limiting its use in tasks such as
+turning a valve to a prescribed setting.
 
-We introduce \methodname, a framework for long-horizon cyclic threading that
-combines learned reactive control with structured policy chaining, as shown in
-\figref{fig:teaser}. We first train teacher policies in a simplified simulation
-that preserves the contact interactions needed for threading while reducing
-irrelevant complexity. We then chain the learned behavior using a release-time
-criterion and a state-machine-based scripted return motion designed to remain
-collision-free. Finally, we distill the chained teacher behavior into a
-vision-based student policy. The student uses a DP3 vision head to encode the
-scene and is trained from collected teacher demonstrations using flow-matching
-imitation learning.
+Play2Perfect addresses controlled screwing through a different form of task
+structure. It first learns a goal-conditioned dexterous manipulation prior
+on a rod shaped object, then fine-tunes it on a three-times-longer furniture leg using
+CAD-derived intermediate pose goals~\cite{play2perfect}. This formulation
+enables goal-directed screwing in a structured setting, but leaves open
+autonomous, long-horizon nut threading with realistic contact and coordinated
+arm--hand control.
+
+We study controlled nut--bolt threading under moderate resistance, where a
+pinch grasp and coordinated arm--hand manipulation are required. The robot must
+repeatedly approach, grasp, rotate, release, return, and re-engage, making the
+task inherently cyclic and long-horizon. We first attempted to train a unified
+teacher policy for the complete multi-cycle task. In practice, however,
+designing rewards that capture both long-horizon progress and precise
+transitions between phases proved exceedingly difficult. We therefore adopt a
+three-level hierarchy. At the lowest level, a learned teacher executes the
+elemental turning motion. At the middle level, scripted transitions chain these
+turns into complete simulated trajectories, which are corrected during
+real-world replay through human intervention. At the highest level, a student
+policy distills these demonstrations into a single deployable policy. We
+evaluate threading accuracy in both simulation and real-world experiments.
 
 The main contributions of this work are:
 \begin{itemize}
-  \item a controlled-threading framework that couples a reactive learned policy
-    with explicit release timing and a collision-free return state machine for
-    long-horizon cyclic execution;
-  \item a teacher-to-student training pipeline that combines simplified
-    simulation, a DP3 visual representation, and flow-matching imitation
-    learning; and
-  \item an evaluation across M24, M30, and M36 nuts with hexagonal, octagonal,
-    rectangular, and round geometries, using maximum cycle count, threading
-    tracking error, and success rate to assess robustness and generalization.
+  \item A reinforcement-learning pipeline for training a teacher policy that
+    operates across multiple nut sizes and rotates an already-engaged nut
+    \(60^\circ\) clockwise.
+
+  \item A hybrid teacher that combines the learned rotation policy with scripted
+    transition motions to generate long-horizon demonstrations for student
+    distillation. The teacher achieves perfect task completion in simulation;
+    we also quantify its reduced success rate in the real world.
+
+  \item A human-in-the-loop real-world data-collection procedure that replaces
+    failed autonomous rollouts with human-guided corrections for fine-tuning.
+
+  \item A visuomotor student-distillation pipeline that consolidates
+    long-horizon hybrid-teacher demonstrations and human corrections into a
+    single flow-matching policy with a DP3-inspired visual encoder.
 \end{itemize}

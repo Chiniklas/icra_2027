@@ -1,6 +1,7 @@
 /.latex-build/
 /main.pdf
 /main.pdf.tmp
+/reference/
 *.synctex.gz
 *.fls
 *.fdb_latexmk

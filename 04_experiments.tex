@@ -15,28 +15,52 @@ tracking.
 
 \subsection{Experimental Setup}
 
-We evaluate the proposed method in both simulation and on real hardware using
-the metrics defined above. For each setting, report the evaluation protocol,
-number of trials, and uncertainty.
+We simulate a seven-DoF Franka Research~3 (FR3) arm equipped with an Inspire
+Hand RH56DFX using Isaac Sim~5.1.0 and Isaac Lab~2.2.1. The 9-D action space
+encodes a six-DoF OSC target and three index--thumb joint commands. At
+\SI{15}{Hz},
+the student converts a calibrated $320\times180$ depth image into 4096 cropped
+points and fuses a 64-dimensional DP3 feature with proprioception, progress,
+and phase; physics runs at \SI{120}{Hz}. For the retained M24 run, we train the
+PPO teacher for 200 epochs in 512 environments and collect 20 successful
+ten-cycle demonstrations (19,486 frames) from 32 environments, with 30 random
+arm impulses per demonstration. We train the flow-matching student for 300
+epochs using eight-step action chunks. All stages use one GPU.
 
-\subsubsection{Simulation}
+% TODO: Validate and report the GPU model, wall-clock training times,
+% domain-randomization ranges, initialization distributions, and the final
+% multi-object training/data budgets used for the paper.
 
-Describe the simulator, task configuration, environment parameters, baselines,
-and domain randomization used for evaluation. State how the simulated trials
-are initialized and when a trial is considered complete or failed.
+\begin{figure}[t]
+  \centering
+  %\includegraphics[width=\columnwidth]{figures/simulation_scene_placeholder.png}
+  \includegraphics[width=\columnwidth]{figures/policy_visuals/teacher/threading_v2_teacher_120_envs.png}
+  \caption{Simulated robot, workspace, and threading task.}
+  \label{fig:simulation_scene}
+\end{figure}
 
-\subsubsection{Real Hardware}
+The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
+Intel RealSense D415 supplies the student's depth observations through the same
+OSC interface used in simulation. Teacher and student training uses only
+hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in distribution and
+hold out the octagonal, rectangular, and round variants of each size for
+out-of-distribution evaluation.
 
-Describe the robot platform, sensors, control frequency, workspace, task setup,
-and safety measures. The hardware evaluation uses a family of test nuts in
-three sizes---M24, M30, and M36. Each size has four geometric variations:
-hexagonal, octagonal, rectangular, and round. Specify the number of trials for
-each size--geometry combination, the success and failure criteria, and any
-differences from the simulation setup.
+% TODO: Validate and report the control and policy frequencies, camera
+% calibration/resolution/frame rate, workspace and safety limits, trial counts,
+% initialization distributions, and success/failure criteria.
+
+\begin{figure}[t]
+  \centering
+  %\includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
+  \includegraphics[width=\columnwidth]{setup-nut-bolt-family/NutBoltHolderFamilyOnly2.jpeg}
+  \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
+  \label{fig:hardware_family}
+\end{figure}
 
 \subsection{Ablations}
 
-We compare five policy-learning variants while keeping the architecture,
+We compare four policy-learning variants while keeping the architecture,
 dataset budget, evaluation protocol, and all unrelated settings fixed.
 
 \paragraph{Behavior Cloning}
@@ -53,13 +77,10 @@ Train on a fixed, pre-collected dataset that includes teacher corrections for
 states visited by an intermediate student policy, without additional online
 interaction during final training.
 
-\paragraph{Online Flow Matching}
-Apply the flow-matching imitation objective while collecting teacher-labeled
-states through online student rollouts and iterative dataset aggregation.
-
 \paragraph{Ours}
-Evaluate the complete proposed distillation method with its intended data
-collection procedure and flow-matching imitation objective.
+Train once on the fixed dataset of hybrid-expert demonstrations and offline
+human corrections using the proposed flow-matching imitation objective; no
+student rollouts or online relabeling are used during training.
 
 \subsection{Quantitative Results}
 

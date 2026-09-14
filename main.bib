@@ -1,3 +1,9 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References. Entries marked "TODO: verify" were drawn from the Notion "Papers"
+% library by title/URL; confirm author lists, venues, and years before
+% submission. URLs are authoritative (project pages) even where metadata is not.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 @book{siciliano2016springer,
   editor    = {Bruno Siciliano and Oussama Khatib},
   title     = {Springer Handbook of Robotics},
@@ -6,4 +12,194 @@
   address   = {Cham, Switzerland},
   year      = {2016},
   doi       = {10.1007/978-3-319-32552-1}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Contact-rich manipulation, contact simulation, and sim-to-real transfer.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{narang2022factory,
+  author    = {Yashraj Narang and Kier Storey and Iretiayo Akinola and
+               Miles Macklin and Philipp Reist and Lukasz Wawrzyniak and
+               Yunrong Guo and Adam Moravanszky and Gavriel State and
+               Michelle Lu and Ankur Handa and Dieter Fox},
+  title     = {{Factory}: Fast Contact for Robotic Assembly},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2022},
+  url       = {https://research.nvidia.com/publication/2022-05_factory-fast-contact-robotic-assembly}
+}
+
+@article{noseworthy2025forge,
+  author  = {Michael Noseworthy and Bingjie Tang and Bowen Wen and Ankur Handa
+             and Chad C. Kessens and Nicholas Roy and Dieter Fox and Fabio Ramos
+             and Yashraj Narang and Iretiayo Akinola},
+  title   = {{FORGE}: Force-Guided Exploration for Robust Contact-Rich
+             Manipulation Under Uncertainty},
+  journal = {IEEE Robotics and Automation Letters},
+  volume  = {10},
+  number  = {5},
+  pages   = {4436--4443},
+  year    = {2025},
+  doi     = {10.1109/LRA.2025.3551637}
+}
+
+@article{dexscrew,
+  author  = {Elvis Hsieh and Wen-Han Hsieh and Yen-Jen Wang and Toru Lin and
+             Jitendra Malik and Koushil Sreenath and Haozhi Qi},
+  title   = {Learning Dexterous Manipulation Skills from Imperfect
+             Simulations},
+  journal = {arXiv preprint arXiv:2512.02011},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2512.02011}
+}
+
+@article{play2perfect,
+  author  = {Tyler Ga Wei Lum and Kushal Kedia and C. Karen Liu and
+             Jeannette Bohg},
+  title   = {{Play2Perfect}: What Matters in Dexterous Play Pretraining for
+             Precise Assembly?},
+  journal = {arXiv preprint arXiv:2606.26428},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2606.26428}
+}
+
+% TODO: verify full author list/venue. Attributed to Toru Lin et al.
+@misc{lin2025recipe,
+  author       = {Toru Lin and Kartik Sachdev and Linxi Fan and
+                  Jitendra Malik and Yuke Zhu},
+  title        = {Sim-to-Real Reinforcement Learning for Vision-Based
+                  Dexterous Manipulation on Humanoids},
+  howpublished = {\url{https://toruowo.github.io/recipe/}},
+  year         = {2025},
+  note         = {Project page}
+}
+
+% TODO: verify authors/venue/year.
+@misc{dextrahrgb,
+  author       = {{DextrAH-RGB Authors}},
+  title        = {{DextrAH-RGB}: Visuomotor Policies to Grasp Anything with
+                  Dexterous Hands},
+  howpublished = {\url{https://dextrah-rgb.github.io/}},
+  year         = {2024},
+  note         = {Project page}
+}
+
+% TODO: verify authors/venue/year.
+@misc{simtoolreal,
+  author       = {{SimToolReal Authors}},
+  title        = {{SimToolReal}: An Object-Centric Policy for Zero-Shot
+                  Dexterous Tool Manipulation},
+  howpublished = {\url{https://simtoolreal.github.io/}},
+  year         = {2025},
+  note         = {Project page}
+}
+
+@inproceedings{tobin2017domain,
+  author    = {Josh Tobin and Rachel Fong and Alex Ray and Jonas Schneider and
+               Wojciech Zaremba and Pieter Abbeel},
+  title     = {Domain Randomization for Transferring Deep Neural Networks from
+               Simulation to the Real World},
+  booktitle = {IEEE/RSJ International Conference on Intelligent Robots and
+               Systems (IROS)},
+  year      = {2017}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Long-horizon manipulation, policy chaining, and compounding error.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{chen2023sequential,
+  author    = {Yuanpei Chen and Chen Wang and Li Fei-Fei and C. Karen Liu},
+  title     = {Sequential Dexterity: Chaining Dexterous Policies for
+               Long-Horizon Manipulation},
+  booktitle = {Proceedings of the 7th Conference on Robot Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {229},
+  pages     = {3809--3829},
+  publisher = {PMLR},
+  year      = {2023},
+  url       = {https://proceedings.mlr.press/v229/chen23e.html}
+}
+
+@inproceedings{ross2011reduction,
+  author    = {St{\'e}phane Ross and Geoffrey J. Gordon and J. Andrew Bagnell},
+  title     = {A Reduction of Imitation Learning and Structured Prediction to
+               No-Regret Online Learning},
+  booktitle = {Proceedings of the 14th International Conference on Artificial
+               Intelligence and Statistics (AISTATS)},
+  year      = {2011}
+}
+
+@inproceedings{chen2020cheating,
+  author    = {Dian Chen and Brady Zhou and Vladlen Koltun and
+               Philipp Kr{\"a}henb{\"u}hl},
+  title     = {Learning by Cheating},
+  booktitle = {Conference on Robot Learning (CoRL)},
+  year      = {2020}
+}
+
+% TODO: verify authors/venue/year.
+@misc{simdist,
+  author       = {{SimDist Authors}},
+  title        = {Simulation Distillation: Pretraining World Models in
+                  Simulation for Rapid Real-World Adaptation},
+  howpublished = {\url{https://sim-dist.github.io/}},
+  year         = {2025},
+  note         = {Project page}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Policy distillation and generative trajectory models (diffusion / flow).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{chi2023diffusion,
+  author    = {Cheng Chi and Siyuan Feng and Yilun Du and Zhenjia Xu and
+               Eric Cousineau and Benjamin Burchfiel and Shuran Song},
+  title     = {Diffusion Policy: Visuomotor Policy Learning via Action
+               Diffusion},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2023}
+}
+
+@inproceedings{ze2024dp3,
+  author    = {Yanjie Ze and Gu Zhang and Kangning Zhang and Chenyuan Hu and
+               Muhan Wang and Huazhe Xu},
+  title     = {{3D} Diffusion Policy: Generalizable Visuomotor Policy Learning
+               via Simple {3D} Representations},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2024}
+}
+
+@inproceedings{lipman2023flow,
+  author    = {Yaron Lipman and Ricky T. Q. Chen and Heli Ben-Hamu and
+               Maximilian Nickel and Matt Le},
+  title     = {Flow Matching for Generative Modeling},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
+}
+
+@inproceedings{liu2023rectified,
+  author    = {Xingchao Liu and Chengyue Gong and Qiang Liu},
+  title     = {Flow Straight and Fast: Learning to Generate and Transfer Data
+               with Rectified Flow},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
+}
+
+% TODO: verify full author list.
+@article{black2024pi0,
+  author  = {Kevin Black and Noah Brown and Danny Driess and others},
+  title   = {{$\pi_0$}: A Vision-Language-Action Flow Model for General Robot
+             Control},
+  journal = {arXiv preprint arXiv:2410.24164},
+  year    = {2024}
+}
+
+@inproceedings{wilcox2025adapt3r,
+  author    = {Albert Wilcox and others},
+  title     = {{Adapt3R}: Adaptive {3D} Scene Representation for Domain Transfer
+               in Imitation Learning},
+  booktitle = {Conference on Robot Learning (CoRL)},
+  year      = {2025},
+  note      = {arXiv:2503.04877}
 }

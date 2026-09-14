@@ -1,15 +1,22 @@
 \begin{algorithm}[t]
-  \caption{Placeholder for \methodname training or inference}
+  \caption{Offline flow distillation with human intervention}
   \label{alg:method}
   \begin{algorithmic}[1]
-    \REQUIRE Inputs, model components, and stopping condition
-    \STATE Initialize the learnable components and data buffers
-    \FOR{each training iteration or control step}
-      \STATE Observe the current input
-      \STATE Compute the proposed intermediate representation
-      \STATE Apply the core method and obtain an output
-      \STATE Update the model, controller, or stored data if required
-    \ENDFOR
-    \RETURN Trained model, policy, plan, or action
+    \REQUIRE Hybrid expert $\pi_E$, human operator $\pi_H$, horizon $H$
+    \STATE Collect simulated rollouts $\mathcal D_{\mathrm{sim}}$ using $\pi_E$
+    \STATE Replay them in the real world, overwriting failed segments with
+      $\pi_H$ to obtain $\mathcal D_{\mathrm{real}}$
+    \STATE Form $H$-step chunks from
+      $\mathcal D=\mathcal D_{\mathrm{sim}}\cup\mathcal D_{\mathrm{real}}$
+    \REPEAT
+      \STATE Sample $(\mathbf{y}_t,\mathbf{U}_t^D)\sim\mathcal D$,
+        $\mathbf{U}_t^0\sim\mathcal N(0,I)$, and $\lambda\sim\mathcal U[0,1]$
+      \STATE Encode the point cloud and fuse it with the conditioning inputs
+        to obtain $\mathbf{c}_t$
+      \STATE Update $\theta$ by minimizing~\eqref{eq:flow_objective}
+      \STATE Update EMA parameters
+        $\bar\theta\leftarrow\alpha\bar\theta+(1-\alpha)\theta$
+    \UNTIL{convergence}
+    \RETURN Student velocity field $v_{\bar\theta}$
   \end{algorithmic}
 \end{algorithm}

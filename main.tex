@@ -86,9 +86,24 @@
 \pagestyle{empty}
 
 \begin{abstract}
-State the problem, the proposed approach, the principal quantitative result,
-and the broader significance of the work. Keep the abstract self-contained and
-avoid citations, undefined abbreviations, and claims not supported in the paper.
+Autonomous nut threading requires a robot to sustain contact-rich manipulation
+over repeated grasp, turn, release, and re-engagement cycles while remaining
+robust to sim-to-real discrepancies. We present \methodname, a hierarchical
+framework for learning this long-horizon behavior without training a single
+reinforcement-learning policy for the entire task. A privileged recurrent
+teacher first learns a goal-directed turning skill in a computationally
+efficient thread simulation that couples rotational and prismatic motion. We
+then combine the learned skill with scripted release and return motions to
+generate complete cyclic demonstrations. These trajectories are replayed on
+real hardware, where human interventions correct impending grasp failures,
+producing a fixed dataset of simulated and real-world demonstrations. Finally,
+we distill the dataset into one depth-conditioned visuomotor policy through
+conditional flow matching. The student uses a compact point-cloud encoder and
+a non-causal Transformer to predict eight-step chunks of unified Cartesian and
+finger commands. At deployment, the student controls every task phase without
+privileged state, scripted transitions, or human input. We evaluate the method
+across multiple nut sizes and held-out nut geometries in simulation and on a
+physical robot.
 \end{abstract}
 
 \section{Introduction}

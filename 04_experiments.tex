@@ -4,14 +4,22 @@
 We evaluate performance using two complementary metrics.
 
 \paragraph{Maximum Cycle Count}
-The maximum cycle count is the largest number of consecutive task cycles
-completed before failure; higher values indicate better long-horizon
-robustness.
+One cycle comprises a target-angle turn followed by successful release, return,
+and re-engagement. Maximum cycle count is the number of consecutive complete
+cycles before the first grasp loss, transition failure, safety termination, or
+timeout; an incomplete final cycle is not counted.
 
 \paragraph{Threading Tracking Error}
-The threading tracking error measures the deviation of the observed thread from
-its desired trajectory during execution; lower values indicate more accurate
-tracking.
+Threading tracking error measures how closely the nut's axial motion follows
+the thread pitch during turning. Over turning samples $\mathcal{T}$, we report
+the axial coupling RMSE
+\begin{equation}
+  E_{\mathrm{thr}}=\sqrt{\frac{1}{|\mathcal{T}|}\sum_{t\in\mathcal{T}}
+  \left[(d_t-d_{b_k})+\frac{\rho}{2\pi}(\theta_t-\theta_{b_k})\right]^2},
+  \label{eq:threading_tracking_error}
+\end{equation}
+where $b_k$ is the start of the cycle containing sample $t$. Lower error
+indicates closer agreement with the desired helix.
 
 \subsection{Experimental Setup}
 

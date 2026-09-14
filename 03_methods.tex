@@ -171,16 +171,20 @@ Student learning is posed as supervised imitation from the fixed dataset of
 simulated hybrid-teacher and human-corrected demonstrations. At time $t$, the
 student observes
 $\mathbf{y}_t=(\mathbf{D}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$
-and learns the distribution of the executed $H$-step action chunk. Unlike
-interactive DAgger, the student never acts during collection and is trained
-only after the dataset is complete.
+and learns the distribution of the executed $H$-step action chunk.
 
-Following DP3~\cite{ze2024dp3}, we discard RGB and reconstruct a point cloud
-$\mathcal{P}_t$ from depth using the camera intrinsics. The vision head takes
-the cropped, normalized point cloud as input and applies a shared pointwise
-encoder followed by symmetric max pooling to produce a visual feature
-$\mathbf{v}_t$. This feature is fused with proprioception, task progress, and
-phase information to form the policy condition $\mathbf{c}_t$.
+Following DP3~\cite{ze2024dp3}, we discard RGB and back-project depth into a
+cropped, normalized point cloud $\mathcal{P}_t$. A compact PointNet with
+$64$--$128$--$256$ pointwise layers and global max pooling encodes
+$\mathcal{P}_t$ into a 64-D feature $\mathbf{v}_t$, which is fused with
+proprioception, task progress, and phase information. A $128$--$128$ ELU MLP
+encodes proprioception, and fusion yields the 256-D condition $\mathbf{c}_t$.
+With $H=8$, a four-layer non-causal Transformer (512-D width, eight heads, and
+a 2048-D GELU MLP) predicts velocities for the eight 9-D action tokens,
+conditioned on $\mathbf{c}_t$ and a sinusoidal flow-time embedding.
+During distillation, we follow DEXTRAH-RGB-style lighting and texture
+randomization to improve robustness and reduce the sim-to-real
+gap~\cite{dextrahrgb}.
 
 The supervision target is the executed action chunk
 $\mathbf{U}_t^D=[\mathbf{u}^D_t,\ldots,\mathbf{u}^D_{t+H-1}]

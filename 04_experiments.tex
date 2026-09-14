@@ -35,15 +35,25 @@ epochs using eight-step action chunks. All stages use one GPU.
   \centering
   %\includegraphics[width=\columnwidth]{figures/simulation_scene_placeholder.png}
   \includegraphics[width=\columnwidth]{figures/policy_visuals/teacher/threading_v2_teacher_120_envs.png}
-  \caption{Simulated robot, workspace, and threading task.}
+  %\caption{Simulated robot, workspace, and threading task.}
+  \caption{Teacher policy in simulation.}
   \label{fig:simulation_scene}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/policy_visuals/student/no_robot_randomization/view_01.png}
+  \caption{Student policy in simulation. The randomized environment and object
+  textures increase visual diversity during training to improve robustness of
+  the vision-based policy.}
+  \label{fig:student_texture_randomization}
 \end{figure}
 
 The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
 Intel RealSense D415 supplies the student's depth observations through the same
 OSC interface used in simulation. Teacher and student training uses only
 hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in distribution and
-hold out the octagonal, rectangular, and round variants of each size for
+hold out the knurled (round), octagonal, and square variants of each size for
 out-of-distribution evaluation.
 
 % TODO: Validate and report the control and policy frequencies, camera
@@ -53,8 +63,12 @@ out-of-distribution evaluation.
 \begin{figure}[t]
   \centering
   %\includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
-  \includegraphics[width=\columnwidth]{setup-nut-bolt-family/NutBoltHolderFamilyOnly2.jpeg}
-  \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
+  \includegraphics[width=\columnwidth]{figures/setup-nut-bolt-family/NutBoltHolderFamilyOnly3.jpeg}
+  \caption{Nut--bolt families used for real-world evaluation. From left to
+  right, the M24$\times$3, M30$\times$3.5, and M36$\times$4 families are shown
+  with their bolts mounted in holders. Each family comprises an ISO metric
+  hexagonal nut and three held-out shape variants: knurled (round), octagonal,
+  and square.}
   \label{fig:hardware_family}
 \end{figure}
 

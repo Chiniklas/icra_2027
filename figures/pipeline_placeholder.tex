@@ -1,26 +1,39 @@
-% Full-width method/pipeline placeholder. Replace with a PDF figure when ready.
+% Abstract hybrid-expert and distillation pipeline.
 \begin{tikzpicture}[
   font=\footnotesize,
   module/.style={
-    draw=black!55,
+    draw=black!58,
     rounded corners=2pt,
-    minimum height=0.58in,
-    text width=0.16\textwidth,
+    minimum height=0.68in,
+    text width=0.135\textwidth,
     align=center,
     inner sep=5pt
   },
-  flow/.style={-{Latex[length=2mm]}, line width=0.75pt, draw=black!70},
-  feedback/.style={-{Latex[length=2mm]}, dashed, line width=0.7pt, draw=black!60}
+  flow/.style={-{Latex[length=2mm]}, line width=0.75pt, draw=black!72},
+  feedback/.style={-{Latex[length=2mm]}, dashed, line width=0.7pt,
+    draw=black!55}
 ]
-  \node[module, fill=blue!7] (input) {\textbf{Inputs}\\Observations, state, or demonstrations};
-  \node[module, fill=orange!8, right=0.32in of input] (representation) {\textbf{Representation}\\Encoder or state estimator};
-  \node[module, fill=orange!8, right=0.32in of representation] (method) {\textbf{Proposed module}\\Core technical contribution};
-  \node[module, fill=orange!8, right=0.32in of method] (decision) {\textbf{Decision}\\Policy, planner, or controller};
-  \node[module, fill=green!8, right=0.32in of decision] (output) {\textbf{Outputs}\\Actions and evaluation signals};
+  \node[module, fill=blue!7] (sim)
+    {\textbf{Reduced contact model}\\$\mathbf{x}_{t+1}=F(\mathbf{x}_t,\mathbf{a}_t,\boldsymbol\xi_t)$};
+  \node[module, fill=blue!7, right=0.20in of sim] (turn)
+    {\textbf{Reactive turn expert}\\$\bar\pi_T(\mathbf{z}_t)$};
+  \node[module, fill=orange!9, right=0.20in of turn] (hybrid)
+    {\textbf{Hybrid supervisor}\\$\pi_E=\{\bar\pi_T,\boldsymbol\kappa_j\}$\\$m_{t+1}=\Gamma(m_t,\mathbf{x}_{t+1})$};
+  \node[module, fill=yellow!12, right=0.20in of hybrid] (data)
+    {\textbf{Aligned rollouts}\\$\mathcal D=\{\mathbf{o}_t,p_t,\mathbf{e}_{m_t},\mathbf{U}_t\}$};
+  \node[module, fill=green!9, right=0.20in of data] (condition)
+    {\textbf{Student condition}\\$\mathbf{v}_t=E_{\rm DP3}(I,D)$\\$\mathbf{c}_t=\Phi(\mathbf{v}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$};
+  \node[module, fill=green!9, right=0.20in of condition] (student)
+    {\textbf{Flow student}\\$\dot{\mathbf{x}}=v_\theta(\mathbf{x},\lambda\mid\mathbf{c}_t)$\\$\widehat{\mathbf{U}}_t\in\mathbb R^{H\times9}$};
 
-  \draw[flow] (input) -- (representation);
-  \draw[flow] (representation) -- (method);
-  \draw[flow] (method) -- (decision);
-  \draw[flow] (decision) -- (output);
-  \draw[feedback] (output.south) -- ++(0,-0.22) -| (method.south);
+  \draw[flow] (sim) -- (turn);
+  \draw[flow] (turn) -- (hybrid);
+  \draw[flow] (hybrid) -- (data);
+  \draw[flow] (data) -- (condition);
+  \draw[flow] (condition) -- (student);
+  \draw[feedback] (student.south) -- ++(0,-0.22) -|
+    node[pos=0.73,below,align=center] {optional student-state\\aggregation $(\beta<1)$}
+    (hybrid.south);
+  \draw[flow] (student.north) -- ++(0,0.20)
+    node[above,align=center] {closed-loop cyclic execution\\(student actions only)};
 \end{tikzpicture}

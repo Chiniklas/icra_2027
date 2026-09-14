@@ -2,80 +2,247 @@
 \begin{figure*}[t]
   \centering
   \resizebox{\linewidth}{!}{\input{figures/pipeline_placeholder}}
-  \caption{Placeholder for the full method or system pipeline. Replace each
-    block with a meaningful stage, show the direction of data flow, and explain
-    train-time versus deployment-time components in the caption.}
+  \caption{Abstract training and execution pipeline. A privileged policy
+    supplies contact-rich turning behavior, while an event-driven controller
+    supplies release and return behavior. Their commands are mapped into one
+    phase-independent action space and collected with synchronized visual and
+    proprioceptive observations. Conditional flow matching then distills the
+    complete hybrid expert into one student. Solid arrows denote the current
+    teacher-controlled data path ($\beta=1$); the dashed arrow denotes the
+    optional online data-aggregation extension. At evaluation, expert commands
+    are removed and the student controls every phase.}
   \label{fig:pipeline}
 \end{figure*}
 
 \subsection{Problem Formulation}
 
-Define the task, assumptions, and notation before describing the method. For a
-state $\mathbf{x}_t$ and control $\mathbf{u}_t$, a generic discrete-time model is
+We formulate cyclic threading as imitation of a hybrid expert under partial
+observation. Let $\mathbf{x}_t\in\mathcal{X}$ denote the simulator state and
+$\mathbf{a}_t\in\mathcal{A}=[-1,1]^9$ a bounded operational-space command. The
+closed-loop contact dynamics are
 \begin{equation}
-  \mathbf{x}_{t+1} = f(\mathbf{x}_t, \mathbf{u}_t) + \boldsymbol{\varepsilon}_t,
-  \label{eq:dynamics}
+  \mathbf{x}_{t+1}
+  =F(\mathbf{x}_t,\mathbf{a}_t,\boldsymbol{\xi}_t),
+  \qquad
+  \mathbf{o}_t=H(\mathbf{x}_t)
+  =(\mathbf{I}_t,\mathbf{D}_t,\mathbf{s}_t),
+  \label{eq:hybrid_dynamics}
 \end{equation}
-where $\boldsymbol{\varepsilon}_t$ denotes process uncertainty. Refer to
-equations by label, as in~\eqref{eq:dynamics}.
+where $\boldsymbol{\xi}_t$ collects contact and appearance variation,
+$\mathbf{I}_t$ and $\mathbf{D}_t$ are aligned RGB and metric-depth images, and
+$\mathbf{s}_t$ is proprioception. The expert additionally observes a
+privileged state $\mathbf{z}_t=H_E(\mathbf{x}_t)$ unavailable to the student.
 
-\subsection{Teacher Policy Training}
+Let $b_k$ be the beginning of cycle $k$ and let
+$\varphi(\mathbf{x}_t;\mathbf{x}_{b_k})$ be the unwrapped, direction-corrected
+relative rotation of the nut about the bolt axis. With $g(\mathbf{x})\in
+\{0,1\}$ denoting a valid opposed-finger grasp, the turn-completion event is
+\begin{equation}
+  \begin{aligned}
+  \tau_k=\inf\{t\ge b_k:\;&g(\mathbf{x}_{t-i})=1,\\[-2pt]
+  &\varphi(\mathbf{x}_{t-i};\mathbf{x}_{b_k})\ge\varphi_{\min},\
+  \forall i<h_g\}.
+  \end{aligned}
+  \label{eq:turn_event}
+\end{equation}
+The return time $r_k=\inf\{t>\tau_k:\mathbf{x}_t\in\mathcal{G}_k\}$ is
+defined by the grasp-frame and hand terminal set
+\begin{equation}
+  \begin{aligned}
+  \mathcal{G}_k=\{\mathbf{x}:\;&
+  \|\mathbf{p}^{e}-\mathbf{p}^{e}_{b_k}\|_2\le\epsilon_p,\\
+  &d_R(\mathbf{R}^{e},\mathbf{R}^{e}_{b_k})\le\epsilon_R,\\
+  &\|\mathbf{q}^{h}-\mathbf{q}^{h}_{b_k}\|_\infty\le\epsilon_h\},
+  \end{aligned}
+  \label{eq:return_set}
+\end{equation}
+where $d_R(\mathbf{R}_1,\mathbf{R}_2)=
+\cos^{-1}((\operatorname{tr}(\mathbf{R}_1^\top\mathbf{R}_2)-1)/2)$.
+For a requested horizon of $K$ cycles, the objective is a single observation
+policy $\pi_\theta$ maximizing uninterrupted completion probability,
+\begin{equation}
+  \max_\theta\;
+  \Pr_{F,\pi_\theta}\!\left[
+    \bigcap_{k=1}^{K}
+    \{\tau_k<\infty,\mathbf{x}_{r_k}\in\mathcal{G}_k\}
+  \right],
+  \label{eq:cyclic_objective}
+\end{equation}
+without resetting the physical nut between cycles.
 
-Use \figref{fig:pipeline} to situate teacher policy training within the complete
-\methodname pipeline.
+\subsection{Hybrid Expert Construction}
 
-\subsubsection{Simplified Simulation}
+\subsubsection{Reactive Turning Policy}
 
-Describe the simplified simulation environment used to train the teacher
-policies, including its state and action spaces, dynamics, task setup, and the
-assumptions or abstractions that distinguish it from the target environment.
+The turning expert is trained in a reduced dynamics model that preserves the
+dominant screw constraint. If $z^n$ is nut translation along the bolt axis and
+$\rho$ is the thread pitch, the ideal constraint is
+\begin{equation}
+  z^n_t-z^n_{b_k}=-\frac{\rho}{2\pi}
+  \varphi(\mathbf{x}_t;\mathbf{x}_{b_k}).
+  \label{eq:screw_constraint}
+\end{equation}
+The privileged recurrent teacher
+$\pi_T(\mathbf{a}\mid\mathbf{z})$ is optimized with PPO. Its shaped return
+separates acquisition, progress, terminal accuracy, and regularization,
+\begin{equation}
+  \begin{aligned}
+  r_t={}&w_g r_g(\mathbf{x}_t)
+      +w_\varphi[\varphi_t-\varphi_{t-1}]_+
+      +w_*r_*(\mathbf{x}_t)\\
+      &-w_a\|\mathbf{a}_t\|_2^2
+      -w_\Delta\|\mathbf{a}_t-\mathbf{a}_{t-1}\|_2^2,
+  \end{aligned}
+  \label{eq:teacher_reward}
+\end{equation}
+with the standard clipped surrogate
+\begin{equation}
+  \begin{aligned}
+  \mathcal{L}_{\mathrm{PPO}}
+  &=-\mathbb{E}_t\!\left[
+    \min\!\left(\rho_t(\vartheta)\widehat A_t,
+    \bar\rho_t(\vartheta)\widehat A_t\right)\right],\\
+  \bar\rho_t(\vartheta)
+  &=\operatorname{clip}(\rho_t(\vartheta),1-\epsilon,1+\epsilon),\\
+  \rho_t(\vartheta)
+  &=\frac{\pi_\vartheta(\mathbf{a}_t\mid\mathbf{z}_t)}
+       {\pi_{\vartheta_{\mathrm{old}}}(\mathbf{a}_t\mid\mathbf{z}_t)}.
+  \end{aligned}
+  \label{eq:ppo_objective}
+\end{equation}
+Only the deterministic mean $\bar\pi_T(\mathbf{z}_t)$ is used during
+demonstration generation.
 
-\subsubsection{Reinforcement Learning Recipe}
+\subsubsection{Event-Driven Release and Return}
 
-Describe the teacher policy architecture, observations and actions, reward
-function, reinforcement learning objective, optimization procedure, and other
-training details needed to reproduce the teacher policies.
+Let $m_t\in\mathcal{M}=\{T,W_1,\ldots,W_J,R\}$ denote turning, release
+waypoints, and return. Each transition phase is a feedback interpolation
+$\boldsymbol\kappa_j(\mathbf{x}_t;\mathbf{y}_j)$ toward a collision-free
+grasp-frame/hand target $\mathbf{y}_j$. The hybrid expert is
+\begin{equation}
+  \pi_E(\mathbf{x}_t,m_t)=
+  \begin{cases}
+    C_T(\mathbf{x}_t,\bar\pi_T(\mathbf{z}_t)), & m_t=T,\\
+    C_j(\mathbf{x}_t,\boldsymbol\kappa_j(\mathbf{x}_t;\mathbf{y}_j)),
+      & m_t\in\{W_j,R\},
+  \end{cases}
+  \label{eq:hybrid_expert}
+\end{equation}
+where $C_T$ and $C_j$ map heterogeneous controller targets into the same
+filtered, bolt-relative OSC coordinates. Thus teacher identity is provenance,
+not a discontinuity in the supervision space.
 
-\subsection{Policy Chaining}
+The mode update $m_{t+1}=\Gamma(m_t,\mathbf{x}_{t+1})$ is event driven:
+$T\rightarrow W_1$ at~\eqref{eq:turn_event}, $W_j\rightarrow W_{j+1}$ after
+the corresponding interpolation, $W_J\rightarrow R$, and $R\rightarrow T$
+only when $\mathbf{x}_{t+1}\in\mathcal{G}_k$. During release and return, the
+screw coordinate is held at its attained value. At $R\rightarrow T$, a rebase
+operator $B_k$ updates only the next-cycle reference,
+\begin{equation}
+  \mathbf{x}_{b_{k+1}}\leftarrow\mathbf{x}_{r_k},
+  \qquad
+  \varphi(\mathbf{x}_{r_k};\mathbf{x}_{b_{k+1}})=0,
+  \qquad
+  \mathbf{x}^{n}_{r_k^+}=\mathbf{x}^{n}_{r_k^-},
+  \label{eq:cycle_rebase}
+\end{equation}
+so the nut state remains continuous while the local control objective renews.
 
-Explain how individual teacher policies are connected into a complete task
-sequence through release timing and a scripted return motion.
+\subsection{Demonstration Distribution}
 
-\subsubsection{Release Timing}
+At collection round $q$, let $\beta_q\in[0,1]$ denote the probability of
+executing the expert rather than the current student. The rollout policy is
+\begin{equation}
+  \begin{aligned}
+  \mathbf{a}^{\mathrm{exec}}_t
+  &=\delta_t\pi_E(\mathbf{x}_t,m_t)
+   +(1-\delta_t)\pi_{\theta_q}(\mathbf{o}_t),\\
+  \delta_t&\sim\operatorname{Bernoulli}(\beta_q),
+  \end{aligned}
+  \label{eq:intervention_policy}
+\end{equation}
+while the stored target is always
+$\mathbf{u}^E_t=\pi_E(\mathbf{x}_t,m_t)$. The present pipeline uses
+$\beta_q=1$, giving coherent multi-step targets on expert-carried states; a
+decreasing $\beta_q$ yields the online aggregation extension in
+\figref{fig:pipeline}. A demonstration is
+\begin{equation}
+  \mathcal{D}=\left\{(\mathbf{I}_t,\mathbf{D}_t,\mathbf{s}_t,
+  p_t,\mathbf{e}_{m_t},\mathbf{u}^E_t)\right\}_{t=0}^{T-1},
+  \quad p_t=\frac{t}{T-1},
+  \label{eq:dataset}
+\end{equation}
+where $\mathbf{e}_{m_t}$ is a coarse process encoding. Windows that cross a
+physical reset are masked. Within-episode phase boundaries are retained and
+made observable through $\mathbf{e}_{m_t}$; terminal windows are padded by
+holding their last valid command.
 
-Describe how the release time is selected, including the state conditions or
-policy signals that trigger release and how the timing enables a successful
-transition to the subsequent skill.
+\subsection{Vision-Conditioned Flow Distillation}
 
-\subsubsection{Collision-Free Scripted Return Motion}
+\subsubsection{DP3 Observation Encoder}
 
-Describe the state machine used to execute the scripted return motion after
-release. Specify its states, transition conditions, and safety checks, and
-explain how the resulting trajectory remains collision-free while returning
-the robot to the initial state required by the next policy.
+Depth is back-projected with camera intrinsics $\mathbf{K}$. For image
+coordinate $\widetilde{\mathbf{v}}_i=(u_i,v_i,1)^\top$ and depth $d_i$,
+\begin{equation}
+  \mathbf{p}^{c}_i=d_i\mathbf{K}^{-1}\widetilde{\mathbf{v}}_i,
+  \qquad
+  \mathcal{P}_t=\{[\mathcal{N}(\mathbf{p}^{c}_i),
+  \mathbf{I}_t(u_i,v_i)]\}_{i=1}^{N},
+  \label{eq:backprojection}
+\end{equation}
+after depth-range and workspace cropping. A shared point map followed by
+symmetric pooling produces a permutation-invariant visual state,
+\begin{equation}
+  \begin{aligned}
+  \mathbf{v}_t&=\max_{i=1,\ldots,N}
+  \phi_{\mathrm{pt}}(\mathcal{P}_{t,i}),\\
+  \mathbf{c}_t&=\Phi\!\left(
+    \mathbf{v}_t,\mathbf{s}_t,E_p(p_t),E_m(\mathbf{e}_{m_t})
+  \right).
+  \end{aligned}
+  \label{eq:student_condition}
+\end{equation}
+An auxiliary decoder $d_n(\mathbf{v}_t)$ predicts nut position, preventing the
+visual representation from discarding task geometry.
 
-\subsection{Student Policy Distillation}
+\subsubsection{Conditional Flow Matching}
 
-Describe how the chained teacher policy is distilled into a vision-based
-student policy.
-
-\subsubsection{DP3 Vision Head}
-
-Describe how the DP3 vision head encodes the visual observation, how its output
-is fused with the robot state, and how the resulting representation conditions
-the student policy.
-
-\subsubsection{Dataset Collection}
-
-Describe how demonstrations are collected from the chained teacher policy,
-including the recorded observations and actions, rollout conditions, dataset
-size and composition, and any filtering or balancing procedure.
-
-\subsubsection{Flow-Matching Imitation Learning}
-
-Define the conditional flow-matching objective used to imitate the teacher
-demonstrations. Specify the action representation, noise and time sampling,
-conditioning inputs, training procedure, and inference-time integration used to
-generate student actions.
+For horizon $H$, define the expert action chunk
+$\mathbf{U}_t=[\mathbf{u}^E_t,\ldots,\mathbf{u}^E_{t+H-1}]\in
+\mathbb{R}^{H\times9}$ and vectorize it as $\mathbf{x}_1$. Draw
+$\mathbf{x}_0\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ and
+$\lambda\sim\mathcal{U}[0,1]$. Along the conditional path
+\begin{equation}
+  \mathbf{x}_\lambda=(1-\lambda)\mathbf{x}_0+\lambda\mathbf{x}_1,
+  \qquad
+  \dot{\mathbf{x}}_\lambda=\mathbf{x}_1-\mathbf{x}_0,
+  \label{eq:flow_path}
+\end{equation}
+we learn a velocity field $v_\theta$ using
+\begin{equation}
+  \begin{aligned}
+  \mathcal{L}_{\mathrm{FM}}
+  &=\mathbb{E}\!\left[\left\|
+  v_\theta(\mathbf{x}_\lambda,\lambda\mid\mathbf{c}_t)
+  -(\mathbf{x}_1-\mathbf{x}_0)
+  \right\|_2^2\right],\\
+  \mathcal{L}(\theta)
+  &=\mathcal{L}_{\mathrm{FM}}
+  +\lambda_n\|d_n(\mathbf{v}_t)-\mathbf{p}^{n}_t\|_2^2.
+  \end{aligned}
+  \label{eq:flow_objective}
+\end{equation}
+At inference, a Gaussian sample is transported by
+\begin{equation}
+  \frac{d\widehat{\mathbf{x}}}{d\lambda}
+  =v_{\bar\theta}(\widehat{\mathbf{x}},\lambda\mid\mathbf{c}_t),
+  \quad \widehat{\mathbf{x}}(0)\sim\mathcal{N}(0,I),
+  \label{eq:flow_inference}
+\end{equation}
+using exponential-moving-average parameters $\bar\theta$. Overlapping chunk
+predictions are temporally ensembled, clipped to $\mathcal{A}$, and decoded by
+the unchanged OSC controller. The student therefore provides every physical
+command in $T$, $W_j$, and $R$; the coordinator retains only event evaluation
+and the reference update~\eqref{eq:cycle_rebase}.
 
 \input{alg/algorithm_template}

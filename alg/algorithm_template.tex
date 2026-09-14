@@ -1,15 +1,28 @@
 \begin{algorithm}[t]
-  \caption{Placeholder for \methodname training or inference}
+  \caption{Hybrid-expert flow distillation}
   \label{alg:method}
   \begin{algorithmic}[1]
-    \REQUIRE Inputs, model components, and stopping condition
-    \STATE Initialize the learnable components and data buffers
-    \FOR{each training iteration or control step}
-      \STATE Observe the current input
-      \STATE Compute the proposed intermediate representation
-      \STATE Apply the core method and obtain an output
-      \STATE Update the model, controller, or stored data if required
+    \REQUIRE Turn expert $\bar\pi_T$, transition controllers
+      $\{\boldsymbol\kappa_j\}_{j=1}^{J}$, intervention $\beta$, horizon $H$
+    \STATE Initialize $\mathcal D\leftarrow\varnothing$, $m\leftarrow T$
+    \FOR{each rollout step $t$}
+      \STATE Observe $\mathbf{x}_t$ and student observation $\mathbf{o}_t$
+      \STATE $\mathbf{u}^E_t\leftarrow\pi_E(\mathbf{x}_t,m_t)$
+      \STATE Sample $\delta_t\sim\mathrm{Bernoulli}(\beta)$ and execute
+        $\delta_t\mathbf{u}^E_t+(1-\delta_t)\pi_\theta(\mathbf{o}_t)$
+      \STATE Update $m_{t+1}\leftarrow\Gamma(m_t,\mathbf{x}_{t+1})$
+      \STATE Append $(\mathbf{o}_t,p_t,\mathbf{e}_{m_t},\mathbf{u}^E_t)$ to
+        $\mathcal D$; mark mode and episode boundaries
     \ENDFOR
-    \RETURN Trained model, policy, plan, or action
+    \STATE Form valid $H$-step chunks $\mathbf{U}_t$ from $\mathcal D$
+    \REPEAT
+      \STATE Sample $(\mathbf{o}_t,p_t,\mathbf{e}_{m_t},\mathbf{U}_t)$,
+        $\mathbf{x}_0\sim\mathcal N(0,I)$, and $\lambda\sim\mathcal U[0,1]$
+      \STATE Encode $\mathbf{c}_t$ using~\eqref{eq:student_condition}
+      \STATE Update $\theta$ by minimizing~\eqref{eq:flow_objective}
+      \STATE Update EMA parameters
+        $\bar\theta\leftarrow\alpha\bar\theta+(1-\alpha)\theta$
+    \UNTIL{convergence}
+    \RETURN Student velocity field $v_{\bar\theta}$
   \end{algorithmic}
 \end{algorithm}

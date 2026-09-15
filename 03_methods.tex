@@ -149,8 +149,8 @@ and return waypoints, and re-engagement. The hybrid teacher is
   \label{eq:hybrid_expert}
 \end{equation}
 where $\boldsymbol\kappa_{m_t}$ is the scripted controller for the active
-transition phase; both branches use the same filtered, bolt-relative OSC action
-space. Release is triggered when the rotation lies within $\pm5^\circ$ of
+transition phase; both branches use the same filtered, bolt-relative Cartesian
+controller action space. Release is triggered when the rotation lies within $\pm5^\circ$ of
 $\varphi_{\mathrm{tar}}$ ($60^\circ$ in our experiments), while a valid
 opposed-finger grasp is maintained for a short dwell period. The fingers then
 open to a safe clearance, after which scripted arm--hand waypoints return to the
@@ -159,8 +159,8 @@ re-engagement, but the physical nut is not reset, producing complete
 multi-cycle demonstrations.
 
 \subsubsection{Data Augmentation under Human Intervention}
-We replay simulated trajectories on the real system through the same OSC
-interface. When slip or misalignment is anticipated, an operator replaces the
+We replay simulated trajectories on the real system through the same Cartesian
+controller. When slip or misalignment is anticipated, an operator replaces the
 replayed teacher actions until a stable grasp is recovered. These human actions
 overwrite the corresponding teacher actions in the trajectory, and the
 resulting corrected trajectory is recorded as a real-world demonstration.

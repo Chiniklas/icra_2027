@@ -74,40 +74,51 @@ out-of-distribution evaluation.
 \begin{figure}[t]
   \centering
   %\includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
-  \includegraphics[width=\columnwidth]{setup-nut-bolt-family/NutBoltHolderFamilyOnly2.jpeg}
+  \includegraphics[width=\columnwidth]{figures/NutBoltHolderFamilyOnly2.jpeg}
   \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
   \label{fig:hardware_family}
 \end{figure}
 
 \subsection{Ablations}
 
-Our ablations address three questions.
+To investigate the contribution of individual components in our framework, we
+conduct ablation studies focusing on four key aspects: \textbf{(Q1)} whether a
+unified multi-cycle student outperforms repeated execution of a single-cycle
+policy, \textbf{(Q2)} the contribution of the DP3 point-cloud encoder,
+\textbf{(Q3)} the effectiveness of flow matching relative to deterministic
+behavior cloning with LSTM and Transformer backbones, and
+\textbf{(Q4)} the benefit of augmenting simulation demonstrations with
+human-corrected real-world trajectories during student distillation. Results
+are averaged over 10 trials on the M24 hexagonal nut and reported in
+\tabref{tab:m24_ablation}.
 
-\noindent\textbf{Q1: Does a unified multi-cycle student outperform repeated
-execution of a single-cycle policy?}
-
-\noindent\textbf{Q2: Does flow matching improve upon deterministic action-chunk
-behavior cloning?}
-
-\noindent\textbf{Q3: Do human-corrected real-world data improve upon
-simulation-only training?}
-
-We compare four variants under matched training and evaluation budgets,
+We compare six variants under matched training and evaluation budgets,
 changing only the component specified by each ablation.
 
 \noindent\textbf{(a) Single-Cycle Student.}
 We train on real-world-augmented single-cycle demonstrations and invoke the
 resulting policy ten times, resetting its temporal context after each cycle.
 
-\noindent\textbf{(b) Action-Chunk Behavior Cloning.}
-Using the same real-world-augmented dataset and eight-step chunks as ours, we
-replace flow matching with deterministic supervised action regression.
+\noindent\textbf{(b) Ours + ResNet Visual Encoder.}
+We replace the DP3 point-cloud encoder with a ResNet-18 encoder operating
+directly on depth images while retaining the same policy backbone,
+flow-matching objective, dataset, and training budget as ours.
 
-\noindent\textbf{(c) Ours with Only Simulated Data.}
+\noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
+Using the same real-world-augmented dataset and eight-step chunks as ours, we
+replace the flow-matching Transformer with an LSTM backbone trained using
+deterministic supervised action regression.
+
+\noindent\textbf{(d) DP3 Vision + Transformer Distillation.}
+Using the same real-world-augmented dataset, eight-step chunks, and Transformer
+backbone as ours, we replace the flow-matching objective with deterministic
+supervised action regression.
+
+\noindent\textbf{(e) Ours with Only Simulated Data.}
 We train the multi-cycle student using only simulated hybrid-teacher
 demonstrations, excluding all human-corrected real-world data.
 
-\noindent\textbf{(d) Ours.}
+\noindent\textbf{(f) Ours.}
 We train one flow-matching student on complete multi-cycle hybrid-teacher
 demonstrations augmented with human-corrected real-world data.
 
@@ -128,22 +139,36 @@ demonstrations augmented with human-corrected real-world data.
 \end{figure}
 
 To address \textbf{Q1}, we compare the single-cycle student (a) with our unified
-multi-cycle student (d). The unified student completes all 10 cycles, compared
-with 5.2 cycles for (a), while reducing the ten-cycle lag from $-311.71^\circ$
-to $-42.10^\circ$ despite similar successful-cycle errors ($-4.21^\circ$ versus
-$-4.56^\circ$). These results show that long-horizon training improves
-sustained execution and adaptation across cycles
+multi-cycle student (f). The unified student completes all 10 cycles, whereas the
+single-cycle student completes only 5.2 cycles on average. Although their per-cycle
+tracking errors are similar, the single-cycle student exhibits a common failure mode:
+after a few cycles, it slips off the upper edge of the nut and fails to track the nut
+as it descends, even for small pitch advances. This behavior indicates that although
+the single-cycle student captures the basic threading skill, it cannot adapt to shifts
+in initial conditions or mitigate compounding errors over a long horizon. In contrast,
+the multi-cycle student learns from full, long-horizon demonstrations and exhibits
+sufficient recovery from and compensation for accumulated errors, resulting in
+substantially stronger full-task completion performance
 (\tabref{tab:m24_ablation}).
 
-\textbf{Q2} is evaluated by comparing action-chunk behavior cloning (b) with
-our flow-matching student (d). Given the same real-world-augmented data and
-eight-step action chunks, (b) completes no successful cycle, whereas (d)
-completes all 10. This comparison demonstrates that flow matching is more
-effective than deterministic action regression in this setting
+For \textbf{Q2}, we compare ours with a ResNet-18 visual encoder (b) against
+our full model with the DP3 point-cloud encoder (f). Both variants use the same
+policy backbone, flow-matching objective, training data, and evaluation budget,
+isolating the contribution of the visual representation
 (\tabref{tab:m24_ablation}).
 
-For \textbf{Q3}, we contrast our simulation-only student (c) with our
-real-world-augmented student (d). Adding human-corrected trajectories raises the
+\textbf{Q3} is evaluated against deterministic behavior-cloning baselines with
+both LSTM and Transformer backbones. All methods use the same
+real-world-augmented data and eight-step action chunks. DP3 vision with LSTM
+distillation (c) completes no successful cycle, whereas our flow-matching
+student (f) completes
+all 10. DP3 vision with Transformer distillation (d) provides a controlled
+comparison that isolates the effect of flow matching from that of the
+Transformer backbone
+(\tabref{tab:m24_ablation}).
+
+For \textbf{Q4}, we contrast our simulation-only student (e) with our
+real-world-augmented student (f). Adding human-corrected trajectories raises the
 average maximum cycle count from 2.1 to 10, reduces the successful-cycle lag
 from $-10.07^\circ$ to $-4.21^\circ$, and reduces the ten-cycle lag from
 $-495.15^\circ$ to $-42.10^\circ$. The real-world data therefore improve both

@@ -62,9 +62,11 @@ eight-step action chunks.
 The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
 Intel RealSense D415 supplies the depth stream, which we downsample to
 $320\times180$ before point-cloud conversion and student inference. Robot
-commands use the same OSC interface as in simulation. Teacher and student
-training use only hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in distribution and
-hold out the octagonal, rectangular, and round variants of each size for
+commands use the same OSC interface as in simulation. In real-world
+deployment, the flow-matching policy uses a prediction horizon of eight and 16
+ODE integration steps. Teacher and student training use only hexagonal nuts.
+We test M24, M30, and M36 hexagonal nuts in distribution and hold out the
+octagonal, rectangular, and round variants of each size for
 out-of-distribution evaluation.
 
 % TODO: Validate and report the control and policy frequencies, camera
@@ -100,19 +102,20 @@ We train on real-world-augmented single-cycle demonstrations and invoke the
 resulting policy ten times, resetting its temporal context after each cycle.
 
 \noindent\textbf{(b) Ours + ResNet Visual Encoder.}
-We replace the DP3 point-cloud encoder with a ResNet-18 encoder operating
-directly on depth images while retaining the same policy backbone,
-flow-matching objective, dataset, and training budget as ours.
+We replace DP3 with a one-branch, ImageNet-pretrained ResNet-18 stage-2 encoder
+that fuses RGB, log depth, validity, and calibrated XYZ geometry into a 64-D
+feature, while keeping the policy, objective, data, and training budget fixed.
 
 \noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
-Using the same real-world-augmented dataset and eight-step chunks as ours, we
-replace the flow-matching Transformer with an LSTM backbone trained using
-deterministic supervised action regression.
+Using the same real-world-augmented dataset as ours, we replace the
+flow-matching Transformer with the DEXTRAH-style backbone---a layer-normalized
+512-unit LSTM followed by a 512--512--256 ELU MLP---trained using deterministic
+supervised action regression.
 
 \noindent\textbf{(d) DP3 Vision + Transformer Distillation.}
-Using the same real-world-augmented dataset, eight-step chunks, and Transformer
-backbone as ours, we replace the flow-matching objective with deterministic
-supervised action regression.
+The deterministic Transformer has four layers, eight attention heads, a 512-D
+hidden representation, 2048-D feed-forward layers, and eight learned queries
+that predict an eight-step action chunk.
 
 \noindent\textbf{(e) Ours with Only Simulated Data.}
 We train the multi-cycle student using only simulated hybrid-teacher

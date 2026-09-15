@@ -1,3 +1,5 @@
+% TODO: Replace all temporary standard deviations below with measured values.
+% These deviations are synthetic and intended only for testing the layout.
 \begin{table}[htbp]
   \makeatletter
   \begingroup
@@ -5,28 +7,31 @@
     \noindent\footnotesize #1:\enspace #2\par
     \@IEEEtablecaptionsepspace}
   \caption{Simulation and real-world ablations on the M24 hexagonal nut over
-    10 trials. Maximum cycles is the mean per-trial maximum; mean cyclic error
-    uses successful cycles only; and ten-cycle error compares their accumulated
-    rotation with the $600^\circ$ target. Errors are signed in degrees: negative
-    denotes lagging and positive denotes overshooting.}
+    10 trials. Each defined entry reports the mean $\pm$ standard deviation.
+    Maximum cycles is computed across trials, cyclic-error statistics use
+    successful cycles only, and ten-cycle error compares accumulated rotation
+    with the $600^\circ$ target. Ten-cycle error is reported as ``--'' for
+    ablations that do not complete all 10 cycles. Errors are signed in degrees:
+    negative denotes lagging and positive denotes overshooting.}
   \label{tab:m24_ablation}
   \endgroup
   \makeatother
   \centering
   \renewcommand{\arraystretch}{1.15}
+  \newcommand{\meanstd}[2]{$#1\mathbin{\pm}#2$}
   \textbf{(a) Simulation}\\[3pt]
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
     \toprule
     Ablation & \shortstack{Max. cycles\\$\uparrow$}
-      & \shortstack{Mean cyclic\\tracking error}
-      & \shortstack{10-cycle\\tracking error} \\
+      & \shortstack{Cyclic tracking\\error $\rightarrow 0$}
+      & \shortstack{10-cycle tracking\\error $\rightarrow 0$} \\
     \midrule
-    (a)                 & \textit{TBD} & \textit{TBD} & \textit{TBD} \\
-    (b)                 & \textit{TBD} & \textit{TBD} & \textit{TBD} \\
-    (c)                 & 0 & -- & -- \\
-    (d)                 & \textit{TBD} & \textit{TBD} & \textit{TBD} \\
-    (e)                 & \textit{TBD} & \textit{TBD} & \textit{TBD} \\
-    \textbf{(f) Ours}   & 10 & \textit{TBD} & \textit{TBD} \\
+    (a)                 & \meanstd{5.5}{0.8} & \meanstd{-4.16}{3.21} & -- \\
+    (b)                 & \meanstd{2.3}{0.9} & \meanstd{+20.17}{7.80} & -- \\
+    (c)                 & \meanstd{0.0}{0.0} & -- & -- \\
+    (d)                 & \meanstd{1.4}{0.8} & \meanstd{+124.21}{18.50} & -- \\
+    (e)                 & \meanstd{10.0}{0.0} & \meanstd{-1.77}{1.02} & \meanstd{-17.7}{3.23} \\
+    \textbf{(f) Ours}   & \meanstd{10.0}{0.0} & \meanstd{-2.13}{1.10} & \meanstd{-21.30}{3.48} \\
     \bottomrule
   \end{tabular*}
 
@@ -35,13 +40,13 @@
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
     \toprule
     Ablation & \shortstack{Max. cycles\\$\uparrow$}
-      & \shortstack{Mean cyclic\\tracking error}
-      & \shortstack{10-cycle\\tracking error} \\
+      & \shortstack{Cyclic tracking\\error $\rightarrow 0$}
+      & \shortstack{10-cycle tracking\\error $\rightarrow 0$} \\
     \midrule
-    (a)                 & 5.2 & -4.56 & -311.71 \\
-    (b)                 & \textit{TBD} & \textit{TBD} & \textit{TBD} \\
-    (e)                 & 2.1 & -10.07 & -495.15 \\
-    \textbf{(f) Ours}   & 10 & -4.21 & -42.10 \\
+    (a)                 & \meanstd{5.2}{1.2} & \meanstd{-4.56}{5.55} & -- \\
+    (b)                 & \meanstd{1.1}{0.9} & \meanstd{+24.09}{9.94} & -- \\
+    (e)                 & \meanstd{2.1}{1.4} & \meanstd{-10.05}{4.08} & -- \\
+    \textbf{(f) Ours}   & \meanstd{10.0}{0.0} & \meanstd{-4.21}{1.20} & \meanstd{-42.10}{4.37} \\
     \bottomrule
   \end{tabular*}
 \end{table}

@@ -67,7 +67,7 @@ camera inside the 120-environment lattice and crop the nearest robots.
 - Source-frame resolution: `1920 x 1080`
 - Debug treatment: task markers and all contact-sensor visualizers hidden
 
-All three variants retain dome-light and tabletop randomization. The first
+All three configurations retain dome-light and tabletop randomization. The first
 also randomizes the shared floor and whole robot. The second keeps the robot's
 authored white-and-black appearance while randomizing the floor. The third
 keeps both the authored robot appearance and default grid floor. Each

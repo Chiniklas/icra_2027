@@ -1,42 +1,37 @@
 % !TeX root = main.tex
 \subsection{Evaluation Metrics}
 
-Each condition is evaluated over $N=10$ trials with a nominal horizon of ten
-cycles. One cycle comprises a $60^\circ$ clockwise turn followed by successful
-release, return, and re-engagement.
+We evaluate each condition over $N=10$ trials, with up to ten cycles per trial.
+Each cycle consists of a $60^\circ$ clockwise turn followed by release, return,
+and re-engagement.
 
 \paragraph{Maximum Cycle Count}
-For trial $i$, $C_i\in[0,10]$ is the number of consecutive complete cycles
-before the first grasp loss, transition failure, safety termination, or
-timeout. An incomplete final cycle is not counted. The tables report the mean
-per-trial maximum, $\bar C=N^{-1}\sum_i C_i$; higher is better.
+For trial $i$, $C_i\in[0,10]$ counts complete cycles before failure or timeout;
+incomplete cycles are excluded. We report
+$\bar C=N^{-1}\sum_i C_i$; higher is better.
 
 \paragraph{Cyclic Tracking Error}
-Cyclic tracking error measures the angular accuracy of each completed turn.
-Let $\Delta\theta_{i,k}$ be the clockwise nut rotation in cycle $k$ of trial
-$i$. The per-cycle error is $e_{i,k}=\Delta\theta_{i,k}-60^\circ$. Across all
-$M=\sum_i C_i$ completed cycles, we report the mean
-$\mu_{\mathrm{cyc}}=M^{-1}\sum_{i,k}e_{i,k}$ and its standard deviation
-$\sigma_{\mathrm{cyc}}$. Thus, these statistics describe tracking accuracy only
-during successful cycles. Negative error denotes lagging and positive error
-denotes overshooting; a mean closer to zero and a smaller standard deviation
-indicate more accurate and consistent turning.
+For completed cycle $k$ in trial $i$, the angular error is
+$e_{i,k}=\Delta\theta_{i,k}-60^\circ$, where $\Delta\theta_{i,k}$ is the
+clockwise nut rotation. Over all $M=\sum_i C_i$ completed cycles, we report
+$\mu_{\mathrm{cyc}}=M^{-1}\sum_{i,k}e_{i,k}$ and standard deviation
+$\sigma_{\mathrm{cyc}}$. Negative values indicate lag and positive values
+overshoot; a mean closer to zero and a smaller deviation are better.
 
 \paragraph{Ten-Cycle Tracking Error}
-Ten-cycle tracking error compares the accumulated rotation from successful
-cycles with the nominal $10\times60^\circ=600^\circ$ target. Let
-$\Theta_i=\sum_{k=1}^{C_i}\Delta\theta_{i,k}$; rotation from an incomplete final
-cycle is not counted. We define $e_{10,i}=\Theta_i-600^\circ$ and report its
-mean over the 10 trials. Equivalently, the reported value is
+For trial $i$, ten-cycle error is
+$e_{10,i}=\sum_{k=1}^{C_i}\Delta\theta_{i,k}-600^\circ$; incomplete cycles are
+excluded. We report its trial mean, equivalently
 $\mu_{10}=\bar C(60^\circ+\mu_{\mathrm{cyc}})-600^\circ$. If no cycle succeeds,
-both tracking-error metrics are undefined and reported as ``--.'' All tracking
-errors use the same sign convention and are reported in degrees.
+both error metrics are reported as ``--.'' All errors are in degrees and use
+the sign convention above.
 
 \subsection{Experimental Setup}
 
 We simulate a seven-DoF Franka Research~3 (FR3) arm equipped with an Inspire
 Hand RH56DFX using Isaac Sim~5.1.0 and Isaac Lab~2.2.1. The 9-D action space
-encodes a six-DoF OSC target and three index--thumb joint commands. At
+encodes a six-DoF Cartesian-controller target and three index--thumb joint
+commands. At
 \SI{15}{Hz},
 the student converts a calibrated $320\times180$ depth image into 4096 cropped
 points and fuses a 64-dimensional DP3 feature with proprioception, progress,
@@ -62,11 +57,11 @@ eight-step action chunks.
 The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
 Intel RealSense D415 supplies the depth stream, which we downsample to
 $320\times180$ before point-cloud conversion and student inference. Robot
-commands use the same OSC interface as in simulation. In real-world
+commands use the same Cartesian controller as in simulation. In real-world
 deployment, the flow-matching policy uses a prediction horizon of eight and 16
 ODE integration steps. Teacher and student training use only hexagonal nuts.
 We test M24, M30, and M36 hexagonal nuts in distribution and hold out the
-octagonal, rectangular, and round variants of each size for
+octagonal, rectangular, and round geometries of each size for
 out-of-distribution evaluation.
 
 % TODO: Validate and report the control and policy frequencies, camera
@@ -94,7 +89,7 @@ human-corrected real-world trajectories during student distillation. Results
 are averaged over 10 trials on the M24 hexagonal nut and reported in
 \tabref{tab:m24_ablation}.
 
-We compare six variants under matched training and evaluation budgets,
+We compare six ablations under matched training and evaluation budgets,
 changing only the component specified by each ablation.
 
 \noindent\textbf{(a) Single-Cycle Student.}
@@ -141,39 +136,70 @@ demonstrations augmented with human-corrected real-world data.
   \label{fig:cycle_tracking}
 \end{figure}
 
-To address \textbf{Q1}, we compare the single-cycle student (a) with our unified
-multi-cycle student (f). The unified student completes all 10 cycles, whereas the
-single-cycle student completes only 5.2 cycles on average. Although their per-cycle
-tracking errors are similar, the single-cycle student exhibits a common failure mode:
-after a few cycles, it slips off the upper edge of the nut and fails to track the nut
-as it descends, even for small pitch advances. This behavior indicates that although
-the single-cycle student captures the basic threading skill, it cannot adapt to shifts
-in initial conditions or mitigate compounding errors over a long horizon. In contrast,
-the multi-cycle student learns from full, long-horizon demonstrations and exhibits
-sufficient recovery from and compensation for accumulated errors, resulting in
-substantially stronger full-task completion performance
-(\tabref{tab:m24_ablation}).
+To address \textbf{Q1}, we compare the single-cycle student (a) with our
+multi-cycle student (f). Our full method completes all 10 cycles in both
+simulation and the real world, whereas the single-cycle student completes only
+5.5 and 5.2 cycles on average, respectively. A typical failure mode is that the
+single-cycle-trained student slips off the edge of the nut after a few cycles,
+showing that (a) learns the basic threading skill but fails to follow the axial
+motion of the nut (\tabref{tab:m24_ablation}).
 
-For \textbf{Q2}, we compare ours with a ResNet-18 visual encoder (b) against
-our full model with the DP3 point-cloud encoder (f). Both variants use the same
-policy backbone, flow-matching objective, training data, and evaluation budget,
-isolating the contribution of the visual representation
-(\tabref{tab:m24_ablation}).
+For \textbf{Q2}, we perform an ablation on the vision encoder using both DP3 and
+ResNet-18 backbones, while holding the policy, objective, data, and training
+budget fixed. A shared decoder is used to evaluate the prediction error of the
+two encoded features. The DP3 encoder achieves a positional error of
+\SI{8}{\milli\meter} and a rotational error of $15.16^\circ$ in simulation,
+while ResNet-18 achieves a similar positional error of \SI{8.6}{\milli\meter}
+but a notably higher rotational error of $31.20^\circ$. Real-world conditions
+further amplify the difference, with ablation (f) completing all 10 cycles
+while ablation (b) completes only 1.1 cycles on average, which we presume
+results from overfitting to the first-cycle data (\tabref{tab:m24_ablation}).
 
-\textbf{Q3} is evaluated against deterministic behavior-cloning baselines with
-both LSTM and Transformer backbones. All methods use the same
-real-world-augmented data and eight-step action chunks. DP3 vision with LSTM
-distillation (c) completes no successful cycle, whereas our flow-matching
-student (f) completes
-all 10. DP3 vision with Transformer distillation (d) provides a controlled
-comparison that isolates the effect of flow matching from that of the
-Transformer backbone
-(\tabref{tab:m24_ablation}).
+Results from ablations (c), (d), and (f) show that the choice of student action
+backbone makes a substantial difference in this long-horizon task, answering
+\textbf{Q3}. While the LSTM backbone fails completely in simulation, diverging
+before completing even the first cycle, the Transformer backbone survives
+slightly longer and completes 1.4 cycles on average, but soon faces the same
+compounding-error problem. Neither ablation (c) nor (d) advances to real-world
+testing (\tabref{tab:m24_ablation}).
 
-For \textbf{Q4}, we contrast our simulation-only student (e) with our
-real-world-augmented student (f). Adding human-corrected trajectories raises the
-average maximum cycle count from 2.1 to 10, reduces the successful-cycle lag
-from $-10.07^\circ$ to $-4.21^\circ$, and reduces the ten-cycle lag from
-$-495.15^\circ$ to $-42.10^\circ$. The real-world data therefore improve both
-sustained execution and angular tracking after transfer
-(\tabref{tab:m24_ablation}).
+The comparison between ablations (e) and (f) provides strong evidence for
+\textbf{Q4}. As shown in \tabref{tab:m24_ablation}, the student policy distilled
+using only simulation data performs perfectly in Isaac Sim, completing all 10
+cycles and even achieving a lower cyclic tracking error and standard deviation
+than our full method. However, when deployed in the real world, the hardware
+sim-to-real gap greatly affects its threading success rate, leaving ablation
+(e) able to complete only 2.1 cycles on average, with a cyclic tracking error of
+$-10.05^\circ$ and a standard deviation of $4.08^\circ$. In contrast, our full
+method maintains consistent performance in both simulation and real-world
+tests, completing all 10 cycles. In the real world, it achieves a cyclic
+tracking error of $-4.21^\circ$ with a standard deviation of $1.20^\circ$,
+slightly higher than in simulation.
+
+In \tabref{tab:id_ood_comparison}, we provide test data for the in-distribution
+M24, M30, and M36 hexagonal nuts, as well as the out-of-distribution octagonal,
+rectangular, and round nuts, to evaluate the generalization ability of our
+method. The results show that our method can execute the task on the
+in-distribution training objects with impressive accuracy. Notably, the M30 nut
+achieves the best performance, with an average lag of $3.7^\circ$ per cycle and
+$37^\circ$ over the ten-cycle trial. The M36 nut achieves the worst performance
+due to its larger size, mainly because the sim-to-real gap is amplified by the
+penetration depth in the training environment, making deployment more
+sensitive.
+
+Across the tested out-of-distribution nut shapes, interestingly, the round nut
+achieves the best performance, followed by the octagonal nut, in terms of both
+mean cyclic tracking error and ten-cycle tracking error. These two nuts even
+outperform the in-distribution M36 nut. The round nut's performance is likely
+due to our unique zigzagged-rim design, which enables smoother force
+transmission. The octagonal nut's performance is likely due to its similarity
+to the hexagonal nut, further indicating that our nut-turning strategy works
+more effectively with rounder shapes.
+
+In contrast, the rectangular nut barely works with the currently trained
+policy. A common failure mode occurs after the nut is turned $60^\circ$
+clockwise: in the next cycle, the fingers are unable to establish contact with
+the next pair of faces due to the rectangular shape, causing the nut to become
+stuck at the first $60^\circ$ position. A smaller nut such as the M24 can escape
+this failure mode by chance, but it survives for only another two cycles before
+the mismatched policy completely fails.

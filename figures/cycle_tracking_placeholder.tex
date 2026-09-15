@@ -1,0 +1,26 @@
+% Placeholder for the final cycle-wise tracking plot.
+\begin{tikzpicture}[x=0.62cm,y=0.55cm,font=\scriptsize]
+  \draw[step=1,draw=black!12,line width=0.35pt] (0,0) grid (10,4);
+  \draw[-{Latex[length=1.6mm]},line width=0.65pt]
+    (0,0) -- (10.45,0) node[below right] {Cycle};
+  \draw[-{Latex[length=1.6mm]},line width=0.65pt]
+    (0,0) -- (0,4.35);
+
+  \foreach \x in {1,...,10} {
+    \draw (\x,0.08) -- (\x,-0.08) node[below=1.5pt] {\x};
+  }
+
+  \node[rotate=90,anchor=south] at (-0.72,2)
+    {Angular tracking error (deg)};
+  \draw[densely dashed,line width=0.65pt,draw=black!55]
+    (0,2) -- (10,2)
+    node[pos=0.98,above left] {zero-error reference};
+
+  \node[left] at (0,3.75) {$+$};
+  \node[left] at (0,2) {$0$};
+  \node[left] at (0,0.25) {$-$};
+
+  \node[draw=black!45,rounded corners=2pt,fill=white,
+    text width=4.4cm,align=center,inner sep=5pt] at (5,2.25)
+    {Insert cycle-wise mean tracking curves\\and variability over 10 trials};
+\end{tikzpicture}

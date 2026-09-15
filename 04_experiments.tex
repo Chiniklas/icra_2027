@@ -1,25 +1,36 @@
 % !TeX root = main.tex
 \subsection{Evaluation Metrics}
 
-We evaluate performance using two complementary metrics.
+Each condition is evaluated over $N=10$ trials with a nominal horizon of ten
+cycles. One cycle comprises a $60^\circ$ clockwise turn followed by successful
+release, return, and re-engagement.
 
 \paragraph{Maximum Cycle Count}
-One cycle comprises a target-angle turn followed by successful release, return,
-and re-engagement. Maximum cycle count is the number of consecutive complete
-cycles before the first grasp loss, transition failure, safety termination, or
-timeout; an incomplete final cycle is not counted.
+For trial $i$, $C_i\in[0,10]$ is the number of consecutive complete cycles
+before the first grasp loss, transition failure, safety termination, or
+timeout. An incomplete final cycle is not counted. The tables report the mean
+per-trial maximum, $\bar C=N^{-1}\sum_i C_i$; higher is better.
 
-\paragraph{Threading Tracking Error}
-Threading tracking error measures how closely the nut's axial motion follows
-the thread pitch during turning. Over turning samples $\mathcal{T}$, we report
-the axial coupling RMSE
-\begin{equation}
-  E_{\mathrm{thr}}=\sqrt{\frac{1}{|\mathcal{T}|}\sum_{t\in\mathcal{T}}
-  \left[(d_t-d_{b_k})+\frac{\rho}{2\pi}(\theta_t-\theta_{b_k})\right]^2},
-  \label{eq:threading_tracking_error}
-\end{equation}
-where $b_k$ is the start of the cycle containing sample $t$. Lower error
-indicates closer agreement with the desired helix.
+\paragraph{Cyclic Tracking Error}
+Cyclic tracking error measures the angular accuracy of each completed turn.
+Let $\Delta\theta_{i,k}$ be the clockwise nut rotation in cycle $k$ of trial
+$i$. The per-cycle error is $e_{i,k}=\Delta\theta_{i,k}-60^\circ$. Across all
+$M=\sum_i C_i$ completed cycles, we report the mean
+$\mu_{\mathrm{cyc}}=M^{-1}\sum_{i,k}e_{i,k}$ and its standard deviation
+$\sigma_{\mathrm{cyc}}$. Thus, these statistics describe tracking accuracy only
+during successful cycles. Negative error denotes lagging and positive error
+denotes overshooting; a mean closer to zero and a smaller standard deviation
+indicate more accurate and consistent turning.
+
+\paragraph{Ten-Cycle Tracking Error}
+Ten-cycle tracking error compares the accumulated rotation from successful
+cycles with the nominal $10\times60^\circ=600^\circ$ target. Let
+$\Theta_i=\sum_{k=1}^{C_i}\Delta\theta_{i,k}$; rotation from an incomplete final
+cycle is not counted. We define $e_{10,i}=\Theta_i-600^\circ$ and report its
+mean over the 10 trials. Equivalently, the reported value is
+$\mu_{10}=\bar C(60^\circ+\mu_{\mathrm{cyc}})-600^\circ$. If no cycle succeeds,
+both tracking-error metrics are undefined and reported as ``--.'' All tracking
+errors use the same sign convention and are reported in degrees.
 
 \subsection{Experimental Setup}
 
@@ -30,10 +41,11 @@ encodes a six-DoF OSC target and three index--thumb joint commands. At
 the student converts a calibrated $320\times180$ depth image into 4096 cropped
 points and fuses a 64-dimensional DP3 feature with proprioception, progress,
 and phase; physics runs at \SI{120}{Hz}. For the retained M24 run, we train the
-PPO teacher for 200 epochs in 512 environments and collect 20 successful
-ten-cycle demonstrations (19,486 frames) from 32 environments, with 30 random
-arm impulses per demonstration. We train the flow-matching student for 300
-epochs using eight-step action chunks. All stages use one GPU.
+PPO teacher for 200 epochs in 512 environments. Using only 20 successful
+ten-cycle demonstrations (19,486 frames) collected from 32 environments, we
+increase trajectory diversity by applying 30 random arm impulses to each
+demonstration. We train the flow-matching student for 300 epochs using
+eight-step action chunks.
 
 % TODO: Validate and report the GPU model, wall-clock training times,
 % domain-randomization ranges, initialization distributions, and the final
@@ -58,10 +70,12 @@ epochs using eight-step action chunks. All stages use one GPU.
 \end{figure}
 
 The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
-Intel RealSense D415 supplies the student's depth observations through the same
-OSC interface used in simulation. Teacher and student training uses only
-hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in distribution and
-hold out the knurled (round), octagonal, and square variants of each size for
+Intel RealSense D415 supplies the depth stream, which we downsample to
+$320\times180$ before point-cloud conversion and student inference. Robot
+commands use the same OSC interface as in simulation. Teacher and student
+training use only hexagonal nuts. We test M24, M30, and M36 hexagonal nuts in
+distribution and
+hold out the octagonal, rectangular, and round variants of each size for
 out-of-distribution evaluation.
 
 % TODO: Validate and report the control and policy frequencies, camera
@@ -71,53 +85,103 @@ out-of-distribution evaluation.
 \begin{figure}[t]
   \centering
   %\includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
-  \includegraphics[width=\columnwidth]{figures/setup-nut-bolt-family/NutBoltHolderFamilyOnly3.jpeg}
-  \caption{Nut--bolt families used for real-world evaluation. From left to
-  right, the M24$\times$3, M30$\times$3.5, and M36$\times$4 families are shown
-  with their bolts mounted in holders. Each family comprises an ISO metric
-  hexagonal nut and three held-out shape variants: knurled (round), octagonal,
-  and square.}
+  \includegraphics[width=\columnwidth]{figures/NutBoltHolderFamilyOnly2.jpeg}
+  \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
   \label{fig:hardware_family}
 \end{figure}
 
 \subsection{Ablations}
 
-We compare four policy-learning variants while keeping the architecture,
-dataset budget, evaluation protocol, and all unrelated settings fixed.
+To investigate the contribution of individual components in our framework, we
+conduct ablation studies focusing on four key aspects: \textbf{(Q1)} whether a
+unified multi-cycle student outperforms repeated execution of a single-cycle
+policy, \textbf{(Q2)} the contribution of the DP3 point-cloud encoder,
+\textbf{(Q3)} the effectiveness of flow matching relative to deterministic
+behavior cloning with LSTM and Transformer backbones, and
+\textbf{(Q4)} the benefit of augmenting simulation demonstrations with
+human-corrected real-world trajectories during student distillation. Results
+are averaged over 10 trials on the M24 hexagonal nut and reported in
+\tabref{tab:m24_ablation}.
 
-\paragraph{Behavior Cloning}
-Train the student policy using supervised behavior cloning on the initially
-collected teacher demonstrations only.
+We compare six variants under matched training and evaluation budgets,
+changing only the component specified by each ablation.
 
-\paragraph{Online DAgger}
-Iteratively execute the current student policy, query the teacher online for
-corrective actions on visited states, aggregate the new samples, and retrain the
-student policy.
+\noindent\textbf{(a) Single-Cycle Student.}
+We train on real-world-augmented single-cycle demonstrations and invoke the
+resulting policy ten times, resetting its temporal context after each cycle.
 
-\paragraph{Offline DAgger}
-Train on a fixed, pre-collected dataset that includes teacher corrections for
-states visited by an intermediate student policy, without additional online
-interaction during final training.
+\noindent\textbf{(b) Ours + ResNet Visual Encoder.}
+We replace the DP3 point-cloud encoder with a ResNet-18 encoder operating
+directly on depth images while retaining the same policy backbone,
+flow-matching objective, dataset, and training budget as ours.
 
-\paragraph{Ours}
-Train once on the fixed dataset of hybrid-expert demonstrations and offline
-human corrections using the proposed flow-matching imitation objective; no
-student rollouts or online relabeling are used during training.
+\noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
+Using the same real-world-augmented dataset and eight-step chunks as ours, we
+replace the flow-matching Transformer with an LSTM backbone trained using
+deterministic supervised action regression.
 
-\subsection{Quantitative Results}
+\noindent\textbf{(d) DP3 Vision + Transformer Distillation.}
+Using the same real-world-augmented dataset, eight-step chunks, and Transformer
+backbone as ours, we replace the flow-matching objective with deterministic
+supervised action regression.
+
+\noindent\textbf{(e) Ours with Only Simulated Data.}
+We train the multi-cycle student using only simulated hybrid-teacher
+demonstrations, excluding all human-corrected real-world data.
+
+\noindent\textbf{(f) Ours.}
+We train one flow-matching student on complete multi-cycle hybrid-teacher
+demonstrations augmented with human-corrected real-world data.
+
+\subsection{Results}
 
 \input{table/maximum_cycle_count}
 
-\input{table/thread_tracking_error}
+\input{table/id_ood_comparison}
 
-\input{table/success_rate}
+\begin{figure}[H]
+  \centering
+  \resizebox{0.96\columnwidth}{!}{%
+    \input{figures/cycle_tracking_placeholder}}
+  \caption{Cycle-wise angular tracking error over ten threading cycles. The
+    final plot will report the mean and standard deviation over 10 trials for
+    each evaluated condition.}
+  \label{fig:cycle_tracking}
+\end{figure}
 
-Interpret the three comparisons instead of repeating table entries. Discuss
-maximum cycle count, threading tracking error, and success rate together, and tie
-every central claim to the corresponding table or statistical test.
+To address \textbf{Q1}, we compare the single-cycle student (a) with our unified
+multi-cycle student (f). The unified student completes all 10 cycles, whereas the
+single-cycle student completes only 5.2 cycles on average. Although their per-cycle
+tracking errors are similar, the single-cycle student exhibits a common failure mode:
+after a few cycles, it slips off the upper edge of the nut and fails to track the nut
+as it descends, even for small pitch advances. This behavior indicates that although
+the single-cycle student captures the basic threading skill, it cannot adapt to shifts
+in initial conditions or mitigate compounding errors over a long horizon. In contrast,
+the multi-cycle student learns from full, long-horizon demonstrations and exhibits
+sufficient recovery from and compensation for accumulated errors, resulting in
+substantially stronger full-task completion performance
+(\tabref{tab:m24_ablation}).
 
-\subsection{Qualitative and Real-World Results}
+For \textbf{Q2}, we compare ours with a ResNet-18 visual encoder (b) against
+our full model with the DP3 point-cloud encoder (f). Both variants use the same
+policy backbone, flow-matching objective, training data, and evaluation budget,
+isolating the contribution of the visual representation
+(\tabref{tab:m24_ablation}).
 
-Use vector figures (PDF) when possible, and ensure plot text remains legible at
-the final column width. Discuss failure cases rather than reporting only the
-best outcomes in the quantitative tables.
+\textbf{Q3} is evaluated against deterministic behavior-cloning baselines with
+both LSTM and Transformer backbones. All methods use the same
+real-world-augmented data and eight-step action chunks. DP3 vision with LSTM
+distillation (c) completes no successful cycle, whereas our flow-matching
+student (f) completes
+all 10. DP3 vision with Transformer distillation (d) provides a controlled
+comparison that isolates the effect of flow matching from that of the
+Transformer backbone
+(\tabref{tab:m24_ablation}).
+
+For \textbf{Q4}, we contrast our simulation-only student (e) with our
+real-world-augmented student (f). Adding human-corrected trajectories raises the
+average maximum cycle count from 2.1 to 10, reduces the successful-cycle lag
+from $-10.07^\circ$ to $-4.21^\circ$, and reduces the ten-cycle lag from
+$-495.15^\circ$ to $-42.10^\circ$. The real-world data therefore improve both
+sustained execution and angular tracking after transfer
+(\tabref{tab:m24_ablation}).

@@ -1,0 +1,49 @@
+\begin{table}[H]
+  \makeatletter
+  \begingroup
+  \long\def\@makecaption#1#2{%
+    \noindent\footnotesize #1:\enspace #2\par
+    \@IEEEtablecaptionsepspace}
+  \caption{In-distribution and out-of-distribution results for our method over
+    10 trials per nut. Out-of-distribution types are shaded. Maximum cycles is
+    averaged per trial; cyclic-error statistics use successful cycles; and
+    ten-cycle error is measured against the $600^\circ$ target. Errors are
+    signed in degrees: negative denotes lagging and positive denotes
+    overshooting.}
+  \label{tab:id_ood_comparison}
+  \endgroup
+  \makeatother
+  \centering
+  \begingroup
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \newcommand{\oodcell}[1]{\cellcolor{gray!15}#1}
+  \begin{tabular}{@{}llcccc@{}}
+    \toprule
+    Size & Type
+      & \shortstack{Max.\\cycles $\uparrow$}
+      & \shortstack{Cyc. err.\\mean $\rightarrow 0$}
+      & \shortstack{Cyc. err.\\std. $\downarrow$}
+      & \shortstack{10-cyc. err.\\mean $\rightarrow 0$} \\
+    \midrule
+    \multirow{4}{*}{M24}
+      & Hex.   & 10 & -4.21 & -- & -42.10 \\
+      & \oodcell{Oct.} & \oodcell{10} & \oodcell{-4.10} & \oodcell{--} & \oodcell{-4.10} \\
+      & \oodcell{Rect.} & \oodcell{3} & \oodcell{-30.30} & \oodcell{--} & \oodcell{-509.10} \\
+      & \oodcell{Round} & \oodcell{10} & \oodcell{-2.33} & \oodcell{--} & \oodcell{-23.30} \\
+    \midrule
+    \multirow{4}{*}{M30}
+      & Hex.   & 10 & -3.70 & -- & -37.00 \\
+      & \oodcell{Oct.} & \oodcell{10} & \oodcell{-3.66} & \oodcell{--} & \oodcell{-36.60} \\
+      & \oodcell{Rect.} & \oodcell{0} & \oodcell{--} & \oodcell{--} & \oodcell{--} \\
+      & \oodcell{Round} & \oodcell{10} & \oodcell{-2.45} & \oodcell{--} & \oodcell{-24.50} \\
+    \midrule
+    \multirow{4}{*}{M36}
+      & Hex.   & 10 & -5.52 & -- & -55.20 \\
+      & \oodcell{Oct.} & \oodcell{10} & \oodcell{-5.48} & \oodcell{--} & \oodcell{-54.80} \\
+      & \oodcell{Rect.} & \oodcell{0} & \oodcell{--} & \oodcell{--} & \oodcell{--} \\
+      & \oodcell{Round} & \oodcell{10} & \oodcell{-4.78} & \oodcell{--} & \oodcell{-47.80} \\
+    \bottomrule
+  \end{tabular}
+  \endgroup
+\end{table}

@@ -46,11 +46,10 @@ The main contributions of this work are:
     \(60^\circ\) clockwise.
 
   \item A hybrid teacher that combines the learned rotation policy with scripted
-    transition motions to generate long-horizon demonstrations for student
-    distillation. The teacher achieves perfect task completion in simulation;
-    we also quantify its reduced success rate in the real world.
+    transition motions to generate long-horizon demonstrations. The teacher achieves
+    perfect task completion in simulation;
 
-  \item A human-in-the-loop real-world data-collection procedure that replaces
+  \item A safedagger style human intervened real-world data-collection procedure that replaces
     failed autonomous rollouts with human-guided corrections for fine-tuning.
 
   \item A visuomotor student-distillation pipeline that consolidates

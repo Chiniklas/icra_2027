@@ -62,11 +62,18 @@ demonstrated action-chunk distribution into a single visuomotor policy.
 \subsection{Privileged Teacher Policy Training}
 
 \subsubsection{Simplified Thread Simulation}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.82\columnwidth]{simplified_thread_simulation-v3.png}
+  \caption{Coupled revolute--prismatic thread model, with
+    $k=-\rho/(2\pi)$ in \eqref{eq:revolute_prismatic_coupling}.}
+  \label{fig:simplified_thread_simulation}
+\end{figure}
 Our simplified thread model couples a passive revolute joint to a coaxial,
-position-controlled prismatic joint, avoiding explicit thread contacts. With
-prismatic coordinate $d_t$, unwrapped direction-corrected revolute coordinate
-$\theta_t$, thread pitch $\rho$, and turn-start index $b_k$, the prismatic
-target is
+position-controlled prismatic joint, avoiding explicit thread contacts, as
+illustrated in \figref{fig:simplified_thread_simulation}. With prismatic
+coordinate $d_t$, unwrapped direction-corrected revolute coordinate $\theta_t$,
+thread pitch $\rho$, and turn-start index $b_k$, the prismatic target is
 \begin{equation}
   d_t^* - d_{b_k}
   = -\frac{\rho}{2\pi}\left(\theta_t-\theta_{b_k}\right),
@@ -126,7 +133,7 @@ excess wrist force ($P_t^{\mathrm{force}}$), residual rotation near the target
 ($P_t^{\mathrm{settle}}$), insufficient table clearance
 ($P_t^{\mathrm{clear}}$), and arm--table contact ($P_t^{\mathrm{contact}}$).
 
-\subsection{Human-in-the-Loop Hybrid Teacher Construction}
+\subsection{Hybrid-Teacher Dataset Construction with Real-World Fine-Tuning}
 
 \subsubsection{Cyclic Teacher Rollout in Simulation}
 In simulation, we combine the learned turning policy with scripted release,
@@ -151,7 +158,7 @@ initial grasp pose and re-engage the nut. The turning reference is updated at
 re-engagement, but the physical nut is not reset, producing complete
 multi-cycle demonstrations.
 
-\subsubsection{Human Intervention During Real-World Trajectory Replay}
+\subsubsection{Data Augmentation under Human Intervention}
 We replay simulated trajectories on the real system through the same OSC
 interface. When slip or misalignment is anticipated, an operator replaces the
 replayed teacher actions until a stable grasp is recovered. These human actions
@@ -200,4 +207,4 @@ $\dot{\mathbf{U}}_t^\lambda=\mathbf{U}_t^D-\mathbf{U}_t^0$. We optimize
   \label{eq:flow_objective}
 \end{equation}
 
-\input{alg/algorithm_template}
+\input{alg/algo_1}

@@ -48,10 +48,39 @@ eight-step action chunks.
 
 \begin{figure}[t]
   \centering
-  %\includegraphics[width=\columnwidth]{figures/simulation_scene_placeholder.png}
-  \includegraphics[width=\columnwidth]{figures/policy_visuals/teacher/threading_v2_teacher_120_envs.png}
-  %\caption{Simulated robot, workspace, and threading task.}
-  \caption{Teacher policy in simulation.}
+  \begin{minipage}[c]{0.495\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/policy_visuals/teacher/threading_v2_teacher_120_envs.png}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.495\columnwidth}
+    \centering
+    \begin{tikzpicture}
+      \path[use as bounding box] (0,0) rectangle (\linewidth,0.5625\linewidth);
+      \begin{scope}
+        \clip (0,0) rectangle (0.25\linewidth,0.5625\linewidth);
+        \node[anchor=south west,inner sep=0pt] at (0,0)
+          {\includegraphics[width=\linewidth]{figures/policy_visuals/teacher/randomization_dark.png}};
+      \end{scope}
+      \begin{scope}
+        \clip (0.25\linewidth,0) rectangle (0.50\linewidth,0.5625\linewidth);
+        \node[anchor=south west,inner sep=0pt] at (0,0)
+          {\includegraphics[width=\linewidth]{figures/policy_visuals/teacher/randomization_warm.png}};
+      \end{scope}
+      \begin{scope}
+        \clip (0.50\linewidth,0) rectangle (0.75\linewidth,0.5625\linewidth);
+        \node[anchor=south west,inner sep=0pt] at (0,0)
+          {\includegraphics[width=\linewidth]{figures/policy_visuals/teacher/threading_v2_lighting_texture_randomization.png}};
+      \end{scope}
+      \begin{scope}
+        \clip (0.75\linewidth,0) rectangle (\linewidth,0.5625\linewidth);
+        \node[anchor=south west,inner sep=0pt] at (0,0)
+          {\includegraphics[width=\linewidth]{figures/policy_visuals/teacher/randomization_blue.png}};
+      \end{scope}
+    \end{tikzpicture}
+  \end{minipage}
+  \caption{Teacher policy training in Isaac Sim (left) and rollouts with
+    lighting and texture randomization (right).}
   \label{fig:simulation_scene}
 \end{figure}
 
@@ -80,9 +109,14 @@ out-of-distribution evaluation.
 
 \begin{figure}[t]
   \centering
-  %\includegraphics[width=\columnwidth]{figures/hardware_family_placeholder.png}
-  \includegraphics[width=\columnwidth]{figures/NutBoltHolderFamilyOnly2.jpeg}
-  \caption{Nuts, bolts, and holders used for real-hardware evaluation.}
+  \includegraphics[width=0.495\columnwidth]{figures/hardware_setup_annotated.png}%
+  \hfill
+  \includegraphics[width=0.495\columnwidth]{figures/NutBoltHolderFamilyOnly2_annotated.png}
+  \caption{Real-world evaluation platform and test-object family. The setup
+    (left) comprises a Franka Research 3 arm, an Inspire Hand RH56DFX, and an
+    Intel RealSense D415 depth camera. The object set (right) contains M24,
+    M30, and M36 nuts with hexagonal, octagonal, rectangular, and round
+    geometries, together with their corresponding bolts and holders.}
   \label{fig:hardware_family}
 \end{figure}
 

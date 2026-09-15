@@ -60,15 +60,16 @@
 % drawing/caption when the paper's core story is settled.
 \newcommand{\teasercaption}{%
   \textbf{Overview of \methodname.}
-  Replace this sentence with a one- or two-sentence explanation of the problem,
-  the central idea, and the headline result shown in the teaser.}
+  Teacher-policy rollouts, scripted resets, and human-corrected real-world
+  demonstrations form a long-horizon dataset for student-policy distillation
+  and cyclic visuomotor deployment.}
 
 \makeatletter
 \let\icra@originalmaketitle\@maketitle
 \renewcommand{\@maketitle}{%
   \icra@originalmaketitle
   \begin{center}
-    \includegraphics[width=\linewidth]{figures/teaser/teaser-option1.png}
+    \includegraphics[width=\linewidth]{figures/teaser_overview.png}
     \captionof{figure}{\teasercaption}
     \label{fig:teaser}
     \vspace{-0.12in}

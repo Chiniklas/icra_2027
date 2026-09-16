@@ -8,7 +8,7 @@ subtask set
   \begin{aligned}
   \mathcal S=(
   &\mathrm{approach},\mathrm{grasp},\mathrm{rotate},\\
-  &\mathrm{goal\ reaching},\mathrm{release},\mathrm{return}),
+  &\mathrm{goal\ reaching},\mathrm{release},\mathrm{return}).
   \end{aligned}
   \label{eq:cycle_subtasks}
 \end{equation}
@@ -63,7 +63,7 @@ hybrid-teacher demonstrations rather than through on-hardware optimization.
     collected and replayed in the real world, where human corrections augment
     the dataset. Each RGB-D snapshot is processed by the DP3 vision encoder
     into a 64-D visual feature, which is concatenated with a 256-D state and
-    task encoding. The combined representation conditions a conditional
+    task encoding to form a 320-D condition. This representation conditions a
     flow-matching model that predicts an 8-step action chunk.}
   \label{fig:main_pipeline}
 \end{figure*}
@@ -142,7 +142,7 @@ the shaped reward
 The reward follows three stages. During approach,
 $R_t^{\mathrm{center}}$ rewards motion toward the nut center and
 $R_t^{\mathrm{face}}$ rewards alignment with the designated opposing faces.
-$R_t^{\mathrm{grasp}}$ marks acquisition of a stable proper grasp. During
+$R_t^{\mathrm{grasp}}$ marks acquisition of a stable, proper grasp. During
 turning, $R_t^{\mathrm{turn}}$ rewards grip-maintaining progress toward the
 fixed helical target. At completion, $R_t^{\mathrm{target}}$ rewards holding
 the target stably. The approach and turning rewards pay only new-best progress,
@@ -160,7 +160,16 @@ excess wrist force ($P_t^{\mathrm{force}}$), residual rotation near the target
 In simulation, we combine the learned turning policy with scripted release,
 collision-free return, and re-engagement motions. Let
 $m_t\in\mathcal{M}_E=\{T,W_1,\ldots,W_J,R\}$ denote the turning phase, release
-and return waypoints, and re-engagement. The hybrid teacher is
+and return waypoints, and re-engagement. Let $\mathbf{x}_t$ denote the full
+simulator state and
+$\mathbf{z}^{\pi}_t=g_{\pi}(\mathbf{x}_t,\boldsymbol\xi_t)$ the actor
+observation obtained by selecting the actor-visible state components and
+applying observation noise $\boldsymbol\xi_t$; $\mathbf h_t$ is the actor's
+recurrent hidden state. During rollout, we use the
+deterministic mean action of the Gaussian teacher policy,
+$\bar\pi_T(\mathbf{z}^{\pi}_t,\mathbf{h}_t)
+=\mathbb E_{\mathbf a\sim\pi_T(\cdot\mid\mathbf{z}^{\pi}_t,\mathbf{h}_t)}
+[\mathbf a]$. The hybrid teacher is
 \begin{equation}
   \pi_E(\mathbf{x}_t,m_t)=
   \begin{cases}
@@ -202,12 +211,12 @@ student never acts during data collection. At time $t$, it observes
 $\mathbf{y}_t=(\mathbf{D}_t,\mathbf{s}_t,p_t,\mathbf{e}_{m_t})$
 and learns the distribution of the executed $H$-step action chunk.
 
-Following DP3~\cite{ze2024dp3}, we discard RGB and back-project depth into a
+Following DP3~\cite{ze2024dp3}, we transform RGB and depth into a
 cropped, normalized point cloud $\mathcal{P}_t$. A compact PointNet with
 $64$--$128$--$256$ pointwise layers and global max pooling encodes
 $\mathcal{P}_t$ into a 64-D feature $\mathbf{v}_t$, which is fused with
 proprioception, task progress, and phase information. A $128$--$128$ ELU MLP
-encodes proprioception, and fusion yields the 256-D condition $\mathbf{c}_t$.
+encodes proprioception, and fusion yields the 320-D condition $\mathbf{c}_t$.
 With $H=8$, a four-layer non-causal Transformer (512-D width, eight heads, and
 a 2048-D GELU MLP) predicts velocities for the eight 9-D action tokens,
 conditioned on $\mathbf{c}_t$ and a sinusoidal flow-time embedding.

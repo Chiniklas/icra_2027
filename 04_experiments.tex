@@ -5,26 +5,30 @@ We evaluate each condition over $N=10$ trials, with up to ten cycles per trial.
 Each cycle consists of a $60^\circ$ clockwise turn followed by release, return,
 and re-engagement.
 
-\paragraph{Maximum Cycle Count}
-For trial $i$, $C_i\in[0,10]$ counts complete cycles before failure or timeout;
-incomplete cycles are excluded. We report
+\paragraph{Mean Completed Cycle Count}
+For trial $i$, $C_i\in\{0,1,\ldots,10\}$ counts completed cycles before
+failure or timeout; incomplete cycles are excluded. We report
 $\bar C=N^{-1}\sum_i C_i$; higher is better.
 
 \paragraph{Cyclic Tracking Error}
 For completed cycle $k$ in trial $i$, the angular error is
-$e_{i,k}=\Delta\theta_{i,k}-60^\circ$, where $\Delta\theta_{i,k}$ is the
-clockwise nut rotation. Over all $M=\sum_i C_i$ completed cycles, we report
+$e_{i,k}=\Delta\varphi_{i,k}-60^\circ$, where
+$\Delta\varphi_{i,k}=\varphi_{i,k}-\varphi_{i,k-1}$ is the clockwise nut
+rotation. Over all $M=\sum_i C_i$ completed cycles, we report
 $\mu_{\mathrm{cyc}}=M^{-1}\sum_{i,k}e_{i,k}$ and standard deviation
 $\sigma_{\mathrm{cyc}}$. Negative values indicate lag and positive values
-overshoot; a mean closer to zero and a smaller deviation are better.
+overshoot; a mean closer to zero and a smaller deviation are better. If $M=0$,
+both cyclic-error statistics are reported as ``--.''
 
 \paragraph{Ten-Cycle Tracking Error}
-For trial $i$, ten-cycle error is
-$e_{10,i}=\sum_{k=1}^{C_i}\Delta\theta_{i,k}-600^\circ$; incomplete cycles are
-excluded. We report its trial mean, equivalently
-$\mu_{10}=\bar C(60^\circ+\mu_{\mathrm{cyc}})-600^\circ$. If no cycle succeeds,
-both error metrics are reported as ``--.'' All errors are in degrees and use
-the sign convention above.
+Let $\mathcal I_{10}=\{i:C_i=10\}$ denote the trials that complete all ten
+cycles. For each $i\in\mathcal I_{10}$, the ten-cycle error is
+$e_{10,i}=\sum_{k=1}^{10}\Delta\varphi_{i,k}-600^\circ$. We report
+$\mu_{10}=|\mathcal I_{10}|^{-1}\sum_{i\in\mathcal I_{10}}e_{10,i}$ and its
+standard deviation over completed ten-cycle trials. Trials with fewer than ten
+completed cycles are excluded; if $\mathcal I_{10}$ is empty, the ten-cycle
+error is reported as ``--.'' All errors are in degrees and use the sign
+convention above.
 
 \subsection{Experimental Setup}
 
@@ -138,7 +142,7 @@ feature, while keeping the policy, objective, data, and training budget fixed.
 
 \noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
 Using the same real-world-augmented dataset as ours, we replace the
-flow-matching Transformer with the DEXTRAH~\cite{dextrahrgb}-style
+flow-matching Transformer with the DEXTRAH-RGB~\cite{dextrahrgb}-style
 backbone---a layer-normalized
 512-unit LSTM followed by a 512--512--256 ELU MLP---trained using deterministic
 supervised action regression.
@@ -178,8 +182,9 @@ two encoded features. The DP3 encoder achieves a positional error of
 while ResNet-18 achieves a similar positional error of \SI{8.6}{\milli\meter}
 but a notably higher rotational error of $31.20^\circ$. Real-world conditions
 further amplify the difference, with ablation (f) completing all 10 cycles
-while ablation (b) completes only 1.1 cycles on average, which we presume
-results from overfitting to the first-cycle data (\tabref{tab:m24_ablation}).
+while ablation (b) completes only 1.1 cycles on average. We attribute this
+performance gap to overfitting to the first-cycle data
+(\tabref{tab:m24_ablation}).
 
 Results from ablations (c), (d), and (f) show that the choice of student action
 backbone makes a substantial difference in this long-horizon task, answering
@@ -215,7 +220,7 @@ due to its larger size, mainly because the sim-to-real gap is amplified by the
 penetration depth in the training environment, making deployment more
 sensitive.
 
-Across the tested out-of-distribution nut shapes, interestingly, the round nut
+Interestingly, among the tested out-of-distribution nut shapes, the round nut
 achieves the best performance, followed by the octagonal nut, in terms of both
 mean cyclic tracking error and ten-cycle tracking error. The round nut's performance is likely
 due to our unique zigzagged-rim design, which enables smoother force
@@ -223,8 +228,8 @@ transmission and reduces slipping. The octagonal nut's performance is likely due
 to the hexagonal nut, further indicating that our nut-turning strategy works
 more effectively with rounder shapes.
 
-In contrast, the rectangular nut barely works with the currently trained
-policy. A common failure mode occurs after the nut is turned $60^\circ$
+In contrast, the current policy performs poorly on the rectangular nut. A
+common failure mode occurs after the nut is turned $60^\circ$
 clockwise: in the next cycle, the fingers are unable to establish contact with
 the next pair of faces due to the rectangular shape, causing the nut to become
 stuck at the first $60^\circ$ position. A smaller nut such as the M24 can escape

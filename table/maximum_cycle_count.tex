@@ -1,5 +1,3 @@
-% TODO: Replace all temporary standard deviations below with measured values.
-% These deviations are synthetic and intended only for testing the layout.
 \begin{table}[H]
   \makeatletter
   \begingroup
@@ -8,10 +6,10 @@
     \@IEEEtablecaptionsepspace}
   \caption{Simulation and real-world ablations on the M24 hexagonal nut over
     10 trials. Each defined entry reports the mean $\pm$ standard deviation.
-    Maximum cycles is computed across trials, cyclic-error statistics use
+    Completed-cycle count is averaged across trials, cyclic-error statistics use
     successful cycles only, and ten-cycle error compares accumulated rotation
-    with the $600^\circ$ target. Ten-cycle error is reported as ``--'' for
-    ablations that do not complete all 10 cycles. Errors are signed in degrees:
+    with the $600^\circ$ target. Ten-cycle error is reported as ``--'' when no
+    trial completes all 10 cycles. Errors are signed in degrees:
     negative denotes lagging and positive denotes overshooting.}
   \label{tab:m24_ablation}
   \endgroup
@@ -22,7 +20,7 @@
   \textbf{(a) Simulation}\\[3pt]
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
     \toprule
-    Ablation & \shortstack{Max. cycles\\$\uparrow$}
+    Ablation & \shortstack{Completed\\cycles $\uparrow$}
       & \shortstack{Cyclic tracking\\error $\rightarrow 0$}
       & \shortstack{10-cycle tracking\\error $\rightarrow 0$} \\
     \midrule
@@ -39,7 +37,7 @@
   \textbf{(b) Real World}\\[3pt]
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc@{}}
     \toprule
-    Ablation & \shortstack{Max. cycles\\$\uparrow$}
+    Ablation & \shortstack{Completed\\cycles $\uparrow$}
       & \shortstack{Cyclic tracking\\error $\rightarrow 0$}
       & \shortstack{10-cycle tracking\\error $\rightarrow 0$} \\
     \midrule

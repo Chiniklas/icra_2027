@@ -8,7 +8,7 @@
 
 Threading a nut onto a bolt is among the most difficult tasks in robotic
 assembly because threaded engagement is notoriously contact-rich. On the one
-hand, the engaged threads can produce more than 1,000 simultaneous contact
+hand, the engaged threads can produce more than 15,000 simultaneous contact
 points, making faithful simulation prohibitively expensive for the large number
 of parallel rollouts required for reinforcement learning. Factory
 directly addresses this computational bottleneck through a combination of
@@ -31,13 +31,11 @@ cloning~\cite{dexscrew}. However, its policy performs uncontrolled spinning
 without target conditioning or learned termination, leaving goal-directed,
 cyclic nut threading unresolved.
 
-Play2Perfect addresses controlled screwing through a specialized task
-formulation. It first learns a goal-conditioned dexterous manipulation prior
-on a rod-shaped object and then fine-tunes the prior on a furniture leg that is
-three times as long, using CAD-derived intermediate pose
-goals~\cite{play2perfect}. This formulation enables goal-directed screwing in a
-structured setting but does not address everyday threaded objects, such as nuts
-and bolts.
+Play2Perfect first pretrains a goal-conditioned manipulation prior through play
+on diverse objects and goals, then fine-tunes it for precise assembly tasks,
+including furniture-leg screwing~\cite{play2perfect}. This formulation enables
+goal-directed screwing in a structured setting but does not address everyday
+threaded objects, such as nuts and bolts.
 
 We first attempted to approach the controlled threading problem for nuts and bolts
 by training a unified teacher policy for the complete

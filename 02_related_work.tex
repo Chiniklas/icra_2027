@@ -41,8 +41,9 @@ manipulation. Most approaches seek robust zero-shot transfer through domain
 randomization~\cite{tobin2017domain} or domain
 adaptation~\cite{wilcox2025adapt3r}, while others use limited real-world data
 to fine-tune or augment a simulation-trained policy~\cite{jiang2025transic}.
-Intervention-based methods such as DAgger and SafeDAgger further concentrate
-expert corrections on failure-prone states~\cite{ross2011reduction,
+DAgger aggregates expert labels on states visited by the learner, whereas
+SafeDAgger reduces expert queries by requesting supervision only when the
+learned policy is predicted to be unsafe~\cite{ross2011reduction,
 zhang2016safedagger}. Similarly, during real-world hybrid-teacher replay, we
 replace anticipated slip or misalignment failures with human corrections and
 add the corrected trajectories to the student-distillation dataset.

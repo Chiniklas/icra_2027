@@ -1,4 +1,4 @@
-% !TeX program = pdflatex
+% !TeX program = latexmk
 % !TeX root = main.tex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ICRA 2027 paper skeleton, organized like reference/RAL_dexsafedagger.
@@ -58,11 +58,13 @@
 % Match the reference paper's page-one structure: title, a full-width teaser,
 % then the two-column abstract and introduction.
 \newcommand{\teasercaption}{%
-  \textbf{Overview of \methodname,} a long-horizon task-policy distillation
-  framework trained offline on a mixed dataset combining simulated
-  demonstrations with human-guided real-world augmentation. The simulated
-  demonstrations use a policy-chaining recipe that periodically alternates
-  between an RL-trained teacher policy and scripted transition policies.}
+  \textbf{Overview of \methodname---decompose during data collection, unify at
+  deployment.} During data collection, an RL-learned turning skill and
+  scripted transition controllers form a hybrid teacher that cyclically
+  alternates between them to generate long-horizon threading demonstrations,
+  while human corrections augment real-world replays to address the sim-to-real
+  gap. Policy distillation then unifies these demonstrations into a single
+  visuomotor policy that executes the complete cyclic task at deployment.}
 
 \makeatletter
 \let\icra@originalmaketitle\@maketitle
@@ -88,23 +90,22 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Learning to perform controlled nut threading is one of the most challenging
-problems in robotic assembly. A policy must transition seamlessly among
-repetitive phases---including grasping, turning, goal reaching, releasing,
-returning, and resetting---to sustain consecutive threading cycles, making
-the task long-horizon and sensitive to policy-chaining errors. We present
-\methodname, a hierarchical
-policy-distillation framework for learning stable and accurate cyclic nut
-threading across multiple nut sizes. Rather than training a monolithic policy
-for the complete task, a privileged reinforcement-learning teacher first
-learns a goal-conditioned turning skill in simulation. We chain this skill
-with scripted transition behaviors to generate complete multi-cycle
-demonstrations. During real-world replays, human interventions selectively
-correct impending failures and augment the demonstrations.
-The resulting mixture of simulated and real-world demonstrations is used to
-distill a student policy through conditional flow matching (CFM). A
-DP3-inspired encoder converts RGB-D observations into point-cloud features
-used to predict eight-step action chunks. We evaluate the student policy in
+Long-horizon cyclic nut threading combines contact-rich turning with reliable
+release, return, and re-engagement transitions. We found that training a
+single reinforcement-learning policy end to end across all of these phases
+makes long-horizon reward design and stable phase transitions difficult.
+We therefore present \methodname, which follows a simple principle: decompose
+during data generation, unify during deployment. A privileged RL policy learns
+only goal-conditioned turning, while scripted controllers execute the
+transition phases; together, they form a hybrid teacher that generates
+complete multi-cycle demonstrations. During real-world replay, human
+interventions correct impending failures caused by sim-to-real discrepancies
+and augment the offline dataset. We then use conditional flow matching to
+distill the simulated and human-corrected demonstrations into a single
+visuomotor student. A DP3-inspired encoder converts RGB-D observations into
+point-cloud features used to predict eight-step action chunks. At deployment,
+the student executes the complete cyclic task without privileged state,
+scripted controllers, or human intervention. We evaluate the student policy in
 10-cycle trials using in-distribution M24, M30, and M36 hexagonal nuts and
 unseen rectangular, octagonal, and round nut geometries. For all
 in-distribution nuts, the policy completes all 10 cycles, with mean cyclic

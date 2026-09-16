@@ -43,37 +43,32 @@ multi-cycle task. In practice, however, designing rewards that capture both
 long-horizon progress and precise transitions between phases proved exceedingly
 difficult.
 
-Therefore, we formulate this problem as a long-horizon
-skill-chaining problem. The approach, grasp, rotate, goal-reaching, release, and return phases
-must be executed sequentially with precise handoffs. Our approach adopts a
-three-level hierarchy. At the lowest level, a learned teacher executes the
-elemental turning motion. At the middle level, scripted transition policies
-chain these turns into complete simulated trajectories, which are corrected
-through human intervention during real-world replay. At the highest level, a
-student policy distills these demonstrations into a single deployable
-visuomotor policy. We evaluate threading accuracy in both simulation and
-real-world experiments.
+This motivates our central design principle: decompose during data generation,
+unify during deployment. During data generation, a learned policy handles the
+contact-rich, goal-conditioned turning skill, while scripted transition
+controllers handle release, return, and re-engagement. We refer to the
+composition of the learned RL skill and scripted transition controllers as the
+hybrid teacher, while human intervention is used only during real-world replay
+to correct teacher trajectories under sim-to-real discrepancies. During
+deployment, a student policy distills these heterogeneous demonstrations into
+a single visuomotor policy that executes the complete cyclic task without
+privileged state, scripted controllers, or human intervention. We evaluate
+threading accuracy in both simulation and real-world experiments.
 
 The main contributions of this work are:
 \begin{itemize}
-  \item A hierarchical learning framework for long-horizon cyclic dexterous
-    manipulation that decomposes nut threading into a learned goal-conditioned
-    turning skill and structured transition behaviors, avoiding the difficulty
-    of training a monolithic policy over repeated contact-rich manipulation
-    cycles.
+  \item A long-horizon cyclic nut-threading formulation and hybrid teacher that
+    combines RL-learned, goal-conditioned turning with scripted release, return,
+    and re-engagement, generating coherent long-horizon, multi-cycle demonstrations without a
+    monolithic RL teacher.
 
-  \item A hybrid-teacher demonstration framework that chains an RL-trained
-    dexterous manipulation policy with scripted release, return, and
-    re-engagement behaviors, enabling scalable generation of coherent
-    long-horizon demonstrations across repeated manipulation cycles.
+  \item A human-corrected sim-to-real demonstration strategy that selectively
+    replaces failure-prone segments during real-world replay, adapting
+    simulated behaviors to hardware contact and perception discrepancies.
 
-  \item A human-corrected sim-to-real data-augmentation strategy that
-    selectively replaces failure-prone segments during real-world replay with
-    corrective demonstrations, efficiently adapting simulated long-horizon
-    behaviors to real-world contact and perception discrepancies.
-
-  \item A unified visuomotor policy distilled from heterogeneous long-horizon
-    demonstrations, combining 3D point-cloud observations with conditional
-    flow matching to execute all manipulation phases without privileged state,
-    scripted transitions, or human intervention at deployment.
+  \item A unified 3D flow-matching visuomotor student that distills
+    heterogeneous demonstrations into complete cyclic behavior without
+    privileged state, scripted controllers, or human assistance at deployment.
+    In real-world tests, it completes every 10-cycle trial on all training
+    sizes and unseen round and octagonal geometries.
 \end{itemize}

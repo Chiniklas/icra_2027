@@ -2,12 +2,12 @@
 
 This workspace follows the official IEEE Robotics and Automation Society
 PaperCept template: US Letter, 10-point text, two columns, and the bundled
-`ieeeconf` class. Its organization mirrors `reference/RAL_dexsafedagger`, and
-the starter is anonymous by default for ICRA 2027 review.
+`ieeeconf` class. The manuscript is anonymous by default for ICRA 2027 review.
 
 ## Build locally
 
-You need a TeX Live distribution with PDFLaTeX, BibTeX, and `latexmk`.
+You need a TeX Live distribution with PDFLaTeX, BibTeX, `latexmk`, Ghostscript,
+and Poppler's PDF utilities.
 
 ```sh
 make
@@ -17,11 +17,23 @@ The compiled paper is written to `main.pdf` in this directory. Intermediate
 LaTeX and BibTeX files stay in `.latex-build/`. Remove all generated files with
 `make clean`.
 
+Run the local submission checks with:
+
+```sh
+make preflight
+```
+
+The preflight verifies the eight-page limit, US Letter page size, PDF 1.4,
+font embedding, absence of Type 3/CID fonts, file size, anonymity, unresolved
+references, and explicit submission-blocker markers. It complements rather
+than replaces PaperCept's server-side PDF test.
+
 On Debian or Ubuntu, a typical installation is:
 
 ```sh
 sudo apt install latexmk texlive-latex-base texlive-latex-recommended \
-  texlive-latex-extra texlive-fonts-recommended
+  texlive-latex-extra texlive-fonts-recommended ghostscript poppler-utils \
+  ripgrep
 ```
 
 On macOS, install MacTeX; on Windows, install TeX Live or MiKTeX. No downloaded
@@ -33,7 +45,10 @@ packages are required at build time because `ieeeconf.cls` is vendored here.
 - `01_introduction.tex` through `06_appendix.tex` contain the paper body.
 - `main.bib` contains BibTeX entries.
 - `figures/`, `table/`, and `alg/` hold reusable paper components.
-- `build-paper.sh` performs a clean, atomic PDF publication to `main.pdf`.
+- `build-paper.sh` performs an atomic, submission-sized PDF publication to
+  `main.pdf`.
+- `check-submission.sh` performs the reproducible local preflight used by
+  `make preflight`.
 
 Leave `\icraanonymoustrue` enabled for review. Only switch it to
 `\icraanonymousfalse` and fill in author details when the conference requests a

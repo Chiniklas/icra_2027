@@ -1,0 +1,47 @@
+# Math labels of the pipeline figure, one per line: name<TAB>LaTeX (math mode).
+# Rendered by build_labels.sh into <name>.svg / .pdf / .png.
+thread_coupling	d_t^*-d_{b_k}=-\frac{\rho}{2\pi}\left(\theta_t-\theta_{b_k}\right)
+z_pi	\mathbf z_t^{\pi}
+pi_T_bar	\bar\pi_T
+pi_E	\pi_E
+pi_H	\pi_H
+D_sim	\textcolor{simblue}{\mathcal D_{\mathrm{sim}}}
+D_real	\textcolor{realred}{\mathcal D_{\mathrm{real}}}
+D_merged	\mathcal D=\textcolor{simblue}{\mathcal D_{\mathrm{sim}}}\cup\textcolor{realred}{\mathcal D_{\mathrm{real}}}
+D_merged_black	\mathcal D=\mathcal D_{\mathrm{sim}}\cup\mathcal D_{\mathrm{real}}
+D_t	\mathbf D_t
+y_t	\mathbf y_t
+pointcloud_P_t	\mathcal P_t
+v_t	\mathbf v_t
+s_t	\mathbf s_t
+progress_p_t	p_t
+e_mt	\mathbf e_{m_t}
+state_inputs	\mathbf s_t,\ p_t,\ \mathbf e_{m_t}
+c_t	\mathbf c_t
+U_D	\mathbf U_t^D
+U_0	\mathbf U_t^0
+U_0_sim_N	\mathbf U_t^0\sim\mathcal N(\mathbf 0,\mathbf I)
+U_lambda	\mathbf U_t^\lambda
+U_lambda_interp	\mathbf U_t^\lambda=(1-\lambda)\,\mathbf U_t^0+\lambda\,\mathbf U_t^D
+lambda	\lambda
+lambda_sim_U	\lambda\sim\mathcal U[0,1]
+delta_lambda	\Delta\lambda=\tfrac{1}{16}
+target_velocity	\dot{\mathbf U}_t^\lambda=\mathbf U_t^D-\mathbf U_t^0
+U_D_minus_U_0	\mathbf U_t^D-\mathbf U_t^0
+v_theta	v_\theta
+v_theta_full	v_\theta(\mathbf U_t^\lambda,\lambda\mid\mathbf c_t)
+v_theta_bar	v_{\bar\theta}
+U_hat	\widehat{\mathbf U}_t
+U_hat_space	\widehat{\mathbf U}_t\in\mathbb R^{8\times 9}
+loss	\mathcal L(\theta)
+loss_full	\mathcal L(\theta)=\mathbb E\big[\lVert v_\theta(\mathbf U_t^\lambda,\lambda\mid\mathbf c_t)-\dot{\mathbf U}_t^\lambda\rVert_2^2\big]
+sample_pair	(\mathbf y_t,\mathbf U_t^D)\sim\mathcal D
+y_t_def	\mathbf y_t=(\mathbf D_t,\mathbf s_t,p_t,\mathbf e_{m_t})
+D_t_D	\mathbf D_t\sim\mathcal D
+pointcloud_P_t_D	\mathcal P_t\sim\mathcal D
+state_inputs_D	(\mathbf s_t,\,p_t,\,\mathbf e_{m_t})\sim\mathcal D
+s_t_D	\mathbf s_t\sim\mathcal D
+progress_phase	p_t,\ \mathbf e_{m_t}
+e_mt_def	\mathbf e_{m_t},\ m_t\in\mathcal M_E=\{T,W_1,\ldots,W_J,R\}
+a_t	\mathbf a_t
+a_t_space	\mathbf a_t\in\mathbb R^{9}

@@ -1,0 +1,111 @@
+% Draft of the deployment (inference) panel: one 15 Hz student tick end to end.
+% Rates come from the code: decimation 8 at dt 1/120 (15 Hz policy), 16 Euler
+% steps per tick, temporal-ensemble decay 0.5. Rebuild from the repository root:
+%   pdflatex -output-directory=<tmp> figures/pipeline/deployment_panel.tex
+\documentclass[class=ieeeconf,letterpaper,10pt,conference,border=2pt,tikz]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm,graphicx,siunitx}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+
+\definecolor{realred}{HTML}{D9224C}
+\definecolor{student}{HTML}{2A8C5F}
+\definecolor{ink}{HTML}{333333}
+\definecolor{openq}{HTML}{E07B00}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\scriptsize, x=1cm, y=1cm,
+  box/.style={draw=#1!70!black, fill=#1!10, rounded corners=2pt, align=center,
+    inner sep=3pt, line width=0.5pt},
+  flow/.style={-{Latex[length=1.8mm]}, line width=0.8pt, draw=ink},
+  lbl/.style={font=\tiny, text=ink, align=center},
+  rate/.style={font=\tiny\bfseries, text=realred!85!black},
+]
+
+% ---------------------------------------------------------------- perception
+\node[draw=ink!40, inner sep=0pt] (cam) at (1.0,4.5)
+  {\includegraphics[width=1.5cm,trim=100 250 200 250,clip]
+  {figures/teaser/InitialPose1.jpg}};
+\node[lbl, below=1pt of cam] {RealSense D415\\$320\times180$ RGB-D};
+\node[rate, above=1pt of cam] {30 Hz stream, sampled at 15 Hz};
+
+\node[box=student, text width=1.5cm] (crop) at (3.3,4.5)
+  {crop +\\back-project};
+\draw[flow] (cam.east) -- (crop.west);
+
+\node[inner sep=0pt] (cloud) at (5.2,4.5)
+  {\includegraphics[width=1.1cm]{figures/pipeline/nut_pointcloud.pdf}};
+\node[lbl, below=0pt of cloud] {$\mathcal P_t$: $4096\times$XYZRGB};
+\draw[flow] (crop.east) -- (cloud.west);
+
+\node[box=student, text width=1.7cm] (enc) at (7.3,4.5)
+  {PointNet + MLP\\+ fusion};
+\draw[flow] (cloud.east) -- (enc.west);
+
+\node[inner sep=0pt] (ct) at (8.85,4.5)
+  {\includegraphics[height=1.1cm,page=3]{figures/pipeline/latent_vector.pdf}};
+\node[lbl, above=0pt of ct] {$\mathbf c_t$};
+\draw[flow] (enc.east) -- (ct.west);
+
+% ---------------------------------------------------------------- ODE solve
+\node[box=student, fill=student!22, text width=2.1cm] (ode) at (10.9,4.5)
+  {\textbf{16 Euler steps}\\$v_{\bar\theta}(\cdot,\lambda\mid\mathbf c_t)$,
+   $\Delta\lambda=\tfrac{1}{16}$};
+\draw[flow] (ct.east) -- (ode.west);
+\node[rate, below=1pt of ode] {16 network passes per tick};
+
+% 16 integration ticks
+\foreach \i in {0,...,16} {
+  \fill[student!70!black] ($(10.0,3.62)+(0.11*\i,0)$) circle (0.032);
+}
+\draw[flow, draw=student!70!black] (9.98,3.62) -- (11.85,3.62);
+
+% ---------------------------------------------------------------- action chunk
+\node[inner sep=0pt] (chunk) at (13.4,4.5) {\begin{tikzpicture}[x=1cm,y=1cm]
+  \foreach \c in {0,...,7} {
+    \foreach \r in {0,...,8} {
+      \fill[student!\the\numexpr20+5*\c\relax!white, draw=student!60!black,
+        line width=0.1pt] (0.13*\c,0.085*\r) rectangle ++(0.11,0.07);
+    }
+  }
+\end{tikzpicture}};
+\node[lbl, above=1pt of chunk] {$\widehat{\mathbf U}_t\in\mathbb R^{8\times 9}$};
+\node[lbl, below=1pt of chunk] {8 steps $=$ \SI{0.53}{\second} horizon};
+\draw[flow] (ode.east) -- (chunk.west);
+
+% ---------------------------------------------------------------- ensembling
+\node[box=student, text width=2.0cm] (ens) at (15.9,4.5)
+  {\textbf{temporal ensemble}\\weights $0.5^{\text{age}}$\\over $\le 8$ chunks};
+\draw[flow] (chunk.east) -- (ens.west);
+\node[rate, below=1pt of ens] {new chunk every tick};
+
+% ---------------------------------------------------------------- control loop
+\node[box=realred, text width=2.0cm] (scale) at (15.9,2.3)
+  {$\mathbf a_t\in\mathbb R^{9}$\\clip, scale, inverse EMA};
+\draw[flow] (ens.south) -- (scale.north);
+
+\node[box=realred, text width=2.1cm] (osc) at (12.9,2.3)
+  {bolt-relative\\Cartesian (OSC) target};
+\draw[flow] (scale.west) -- (osc.east);
+
+\node[box=realred, text width=2.0cm] (ctrl) at (10.0,2.3)
+  {joint torques\\FR3 + Inspire hand};
+\draw[flow] (osc.west) -- node[rate, above]{\SI{1}{\kilo\hertz}?} (ctrl.east);
+
+\node[box=realred, text width=1.9cm] (world) at (7.3,2.3)
+  {nut turns,\\scene changes};
+\draw[flow] (ctrl.west) -- (world.east);
+\draw[flow] (world.west) -| node[rate, below, pos=0.25]{closed loop at \SI{15}{\hertz}}
+  (cam.south);
+
+% ---------------------------------------------------------------- open inputs
+\node[box=openq, text width=4.6cm, dashed] (open) at (3.6,1.2)
+  {\textbf{still supplied by the sim coordinator}\\
+   phase $\mathbf e_{m_t}$: release once the turn $\ge 55^\circ$\\
+   progress $p_t$: elapsed time / median episode length\\
+   \emph{needs an on-robot source at deployment}};
+\draw[flow, draw=openq!80!black, dashed] (open.north) |- (enc.south -| 3.6,3.4)
+  -- (enc.south);
+
+\end{tikzpicture}
+\end{document}

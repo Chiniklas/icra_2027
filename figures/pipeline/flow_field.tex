@@ -1,0 +1,31 @@
+% Flow-matching field for the pipeline figure (computed in flow_field.lua).
+% Rebuild from the repository root:
+%   lualatex -output-directory=<tmp> figures/pipeline/flow_field.tex
+\documentclass[class=ieeeconf,letterpaper,10pt,conference,border=2pt,tikz]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm}
+\usetikzlibrary{arrows.meta}
+
+\definecolor{simblue}{HTML}{2E6FD0}
+\definecolor{realred}{HTML}{D9224C}
+\definecolor{student}{HTML}{2A8C5F}
+\definecolor{noise}{HTML}{F2994A}
+\definecolor{datacol}{HTML}{4A90D9}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm, y=1cm, font=\tiny]
+  \directlua{dofile("figures/pipeline/flow_field.lua")}
+
+  % panel titles (coordinates match SIDE, GAP, W, H in flow_field.lua)
+  \node[above] at (0.275,2.3) {$\mathbf U_t^0\!\sim\!\mathcal N$};
+  \node[above] at (2.18,2.3) {$v_\theta(\mathbf U_t^\lambda,\lambda\mid\mathbf c_t)$};
+  \node[above] at (4.085,2.3) {$\widehat{\mathbf U}_t$ vs.\ $\mathbf U_t^D$};
+
+  % flow-time axis
+  \node[below=1pt] at (0.63,-0.05) {0};
+  \node[below=1pt] at (2.18,-0.05) {0.5};
+  \node[below=1pt] at (3.73,-0.05) {1};
+  \node[below=1pt] at (1.405,-0.05) {$\lambda$};
+  \node[below=1pt, text=black!70] at (2.955,-0.05) {$\Delta\lambda=\tfrac{1}{16}$};
+\end{tikzpicture}
+\end{document}

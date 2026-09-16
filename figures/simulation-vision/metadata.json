@@ -1,0 +1,74 @@
+{
+  "task": "Isaac-Forge-Franka-Threading-M24-v0",
+  "task_config_path": "/home/carsten.oertel/code/forgeUltra/forge_ultra/tasks/forge_franka_threading/config/tasks/vanilla_threading.yaml",
+  "camera_prim": "/World/envs/env_0/RealSenseD415ColorOpticalCamera",
+  "camera_projection": "pinhole",
+  "resolution": [
+    320,
+    180
+  ],
+  "seed": 0,
+  "physics_randomization_disabled": true,
+  "visual_domain_randomization": {
+    "lighting": true,
+    "table_texture": true,
+    "background_texture": false,
+    "texture_root": "/home/carsten.oertel/code/tg2_dexman_isaac_co/dextrah_lab/assets",
+    "lighting_change_probability": 0.3,
+    "background_change_probability": 0.5,
+    "background_depth_threshold_m": 1.5,
+    "light_intensity_min": 1000.0,
+    "light_intensity_max": 4000.0,
+    "enabled": true
+  },
+  "frames": [
+    {
+      "frame": 0,
+      "env_step": 7,
+      "table_texture": "Carpet_Berber_Multi_BaseColor.png",
+      "dome_light_texture": "studio_small_08_4k.exr",
+      "dome_light_intensity": 1836.148681640625,
+      "depth_percentile_range_m": [
+        0.7633471393585205,
+        4.788246726989747
+      ],
+      "valid_depth_fraction": 0.7756770833333333
+    },
+    {
+      "frame": 1,
+      "env_step": 29,
+      "table_texture": "Leather_Brown_BaseColor.png",
+      "dome_light_texture": "blue_photo_studio_4k.exr",
+      "dome_light_intensity": 1016.8259887695312,
+      "depth_percentile_range_m": [
+        0.7364961791038513,
+        4.815871028900147
+      ],
+      "valid_depth_fraction": 0.7658854166666667
+    },
+    {
+      "frame": 2,
+      "env_step": 51,
+      "table_texture": "Cardboard_BaseColor.png",
+      "dome_light_texture": "pretville_cinema_4k.exr",
+      "dome_light_intensity": 2250.425537109375,
+      "depth_percentile_range_m": [
+        0.6340962839126587,
+        4.8188524818420415
+      ],
+      "valid_depth_fraction": 0.7717708333333333
+    },
+    {
+      "frame": 3,
+      "env_step": 73,
+      "table_texture": "Timber_Cladding_BaseColor.png",
+      "dome_light_texture": "large_corridor_4k.exr",
+      "dome_light_intensity": 1702.0738525390625,
+      "depth_percentile_range_m": [
+        0.6327593839168548,
+        4.818310165405274
+      ],
+      "valid_depth_fraction": 0.774375
+    }
+  ]
+}

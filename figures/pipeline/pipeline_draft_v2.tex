@@ -1,0 +1,198 @@
+% Draft v2 of the full-width pipeline figure (fig:pipeline).
+% Stage 3 sources the separately built flow_field.pdf, nut_pointcloud.pdf, and
+% latent_vector.pdf. Paths are relative to the repository root. Rebuild from
+% the root:
+%   pdflatex -output-directory=<tmp> figures/pipeline/pipeline_draft_v2.tex
+%   pdftoppm -png -r 250 -singlefile <tmp>/pipeline_draft_v2.pdf figures/pipeline/pipeline_draft_v2
+\documentclass[class=ieeeconf,letterpaper,10pt,conference,border=2pt,tikz]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm,graphicx}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+
+\definecolor{simblue}{HTML}{2E6FD0}
+\definecolor{realred}{HTML}{D9224C}
+\definecolor{script}{HTML}{E07B00}
+\definecolor{student}{HTML}{2A8C5F}
+\definecolor{ink}{HTML}{333333}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\scriptsize, x=1cm, y=1cm,
+  panel/.style={draw=#1!55, fill=#1!4, rounded corners=4pt, line width=0.6pt},
+  ptitle/.style={font=\footnotesize\bfseries, text=#1!80!black},
+  box/.style={draw=#1!70!black, fill=#1!10, rounded corners=2pt, align=center,
+    inner sep=2.5pt, line width=0.5pt},
+  flow/.style={-{Latex[length=1.6mm]}, line width=0.7pt, draw=ink},
+  bigflow/.style={-{Latex[length=2.4mm]}, line width=1.4pt, draw=ink!75},
+  lbl/.style={font=\tiny, text=ink, align=center},
+]
+
+% ---------------------------------------------------------------- panels
+\draw[panel=simblue] (0,0) rectangle (3.7,6.7);
+\draw[panel=gray]    (4.0,0) rectangle (8.5,6.7);
+\draw[panel=student] (8.8,0) rectangle (15.6,6.7);
+\draw[panel=realred] (15.9,0) rectangle (18.2,6.7);
+
+\node[ptitle=simblue] at (1.85,6.42) {1\; Privileged Teacher};
+\node[ptitle=gray]    at (6.25,6.42) {2\; Hybrid-Teacher Demos};
+\node[ptitle=student] at (12.2,6.42) {3\; Flow-Matching Distillation};
+\node[ptitle=realred] at (17.05,6.42) {4\; Deployment};
+
+% ---------------------------------------------------------------- panel 1
+\node (envs) at (1.85,5.3) {\includegraphics[width=3.4cm,trim=0 260 0 40,clip]
+  {figures/policy_visuals/teacher/threading_v2_teacher_120_podium.png}};
+\node[lbl, fill=white, fill opacity=0.8, text opacity=1, anchor=north west,
+  inner sep=1pt] at (envs.north west) {Isaac Lab, 512 envs};
+
+\node[box=simblue, text width=3.2cm] (thread) at (1.85,3.9)
+  {\textbf{Simplified thread model}\\[1pt]
+   $d_t^*-d_{b_k}=-\frac{\rho}{2\pi}(\theta_t-\theta_{b_k})$};
+
+\node[box=simblue, text width=1.4cm] (actor) at (0.92,2.65)
+  {\textbf{Actor}\\noisy obs.};
+\node[box=simblue, text width=1.4cm] (critic) at (2.78,2.65)
+  {\textbf{Critic}\\privileged};
+\node[box=simblue, text width=3.2cm] (ppo) at (1.85,1.6)
+  {LSTM actor--critic, PPO};
+\node[box=simblue, text width=3.2cm, fill=simblue!22] (piT) at (1.85,0.6)
+  {\textbf{Turning policy} $\bar\pi_T$\\M24 / M30 / M36};
+
+\draw[flow] (envs.south) -- (thread.north);
+\draw[flow] (thread.south -| actor) -- (actor.north);
+\draw[flow] (thread.south -| critic) -- (critic.north);
+\draw[flow] (actor.south) -- (actor.south |- ppo.north);
+\draw[flow] (critic.south) -- (critic.south |- ppo.north);
+\draw[flow] (ppo.south) -- (piT.north);
+
+% ---------------------------------------------------------------- panel 2
+\def\R{0.78}
+\coordinate (cyc) at (5.5,5.0);
+\foreach \a/\b in {78/12, -12/-78, -102/-168, 168/102}
+  \draw[line width=0.8pt, draw=ink!55, -{Latex[length=1.5mm]}]
+    ($(cyc)+(\a:\R)$) arc (\a:\b:\R);
+\node[font=\footnotesize] at (cyc) {$\pi_E$};
+\node[box=simblue, fill=simblue!22] (turn) at ($(cyc)+(90:\R)$) {Turn $\bar\pi_T$};
+\node[box=script, font=\tiny] (rel)  at ($(cyc)+(0:\R)$)   {Release};
+\node[box=script, font=\tiny] (ret)  at ($(cyc)+(-90:\R)$) {Return};
+\node[box=script, font=\tiny] (reen) at ($(cyc)+(180:\R)$) {Re-engage};
+\node[lbl] at ($(cyc)+(0.2,-1.2)$) {scripted transitions, nut not reset};
+
+\node (dsim) at (7.75,5.0) {\includegraphics[width=1.35cm]
+  {figures/datasets/dataset_sim.png}};
+\node[lbl, below=-1pt of dsim] {sim rollouts};
+\draw[flow] (rel.east) -- (dsim.west |- rel.east);
+
+\node[draw=ink!40, inner sep=0pt] (robot) at (4.85,2.05)
+  {\includegraphics[width=1.2cm,trim=100 250 200 250,clip]
+  {figures/teaser/InitialPose1.jpg}};
+\node[lbl, below=1pt of robot] {real replay};
+\node (dreal) at (7.75,2.05) {\includegraphics[width=1.35cm]
+  {figures/datasets/dataset_real.png}};
+\node[box=realred, text width=1.6cm] (human) at (6.3,2.85)
+  {\textbf{Human} $\pi_H$\\corrects failures};
+\draw[flow] (7.75,4.18) -- (7.75,3.45) -| node[lbl, left, pos=0.75]{replay}
+  (robot.north);
+\draw[flow] (robot.east |- 0,2.05) -- (dreal.west |- 0,2.05);
+\draw[flow, draw=realred] (human.south) -- (human.south |- 0,2.1);
+
+% ---------------------------------------------------------------- panel 3
+\node[inner sep=0pt] (data) at (9.55,4.55)
+  {\includegraphics[width=1.35cm]{figures/datasets/dataset_merged_curves.pdf}};
+\node[lbl] at (9.55,5.25)
+  {$\mathcal D=$\\$\textcolor{simblue}{\mathcal D_{\mathrm{sim}}}\cup\textcolor{realred}{\mathcal D_{\mathrm{real}}}$};
+
+% observations y_t ~ D split into three inputs
+\def\bus{10.45}
+\draw[line width=0.7pt, draw=ink] (data.east) -- node[lbl, above]{$\mathbf y_t$} (\bus,4.55);
+\draw[line width=0.7pt, draw=ink] (\bus,3.45) -- (\bus,5.55);
+
+% (a) depth -> point cloud -> PointNet -> v_t
+\draw[shade, left color=black!75, right color=white!85, draw=ink!40]
+  (10.66,5.4) rectangle ++(0.72,0.42);
+\node[draw=ink!40, inner sep=0pt, anchor=south west] (rgbd) at (10.58,5.32)
+  {\includegraphics[width=0.72cm,trim=560 60 560 280,clip]
+  {figures/policy_visuals/student/no_robot_randomization/view_01.png}};
+\node[lbl, below=0pt of rgbd] {depth $\mathbf D_t$};
+\draw[flow] (\bus,5.55) -- (rgbd.west |- 0,5.55);
+
+\node[inner sep=0pt] (cloud) at (11.95,5.55)
+  {\includegraphics[width=0.8cm]{figures/pipeline/nut_pointcloud.pdf}};
+\node[lbl, below=0pt of cloud] {$\mathcal P_t$};
+\draw[flow] ($(rgbd.east)+(0.08,0.02)$) -- (cloud.west |- 0,5.57);
+
+\node[trapezium, trapezium angle=70, shape border rotate=270, draw=student!70!black,
+  fill=student!12, minimum height=0.7cm, inner sep=1pt, font=\tiny]
+  (pnet) at (12.9,5.55) {PointNet};
+\draw[flow] (cloud.east |- pnet.west) -- (pnet.west);
+
+\node[inner sep=0pt] (vt) at (13.7,5.55)
+  {\includegraphics[height=0.95cm,page=1]{figures/pipeline/latent_vector.pdf}};
+\node[lbl, below=0pt of vt] {$\mathbf v_t$ (64)};
+\draw[flow] (pnet.east) -- (vt.west);
+
+% (b) proprioception -> MLP
+\node[box=student] (st) at (11.15,4.3) {$\mathbf s_t$};
+\draw[flow] (\bus,4.3) -- (st.west);
+\node[draw=student!70!black, fill=student!12, rounded corners=2pt, line width=0.5pt,
+  minimum width=0.6cm, minimum height=0.55cm, inner sep=1pt, font=\tiny]
+  (mlp) at (12.9,4.3) {MLP};
+\draw[flow] (st.east) -- (mlp.west);
+\node[inner sep=0pt] (zs) at (13.7,4.3)
+  {\includegraphics[height=0.95cm,page=2]{figures/pipeline/latent_vector.pdf}};
+\node[lbl, below=0pt of zs] {(128)};
+\draw[flow] (mlp.east) -- (zs.west);
+
+% (c) progress and phase, no encoder
+\node[box=student] (pe) at (11.2,3.45) {$p_t,\ \mathbf e_{m_t}$};
+\draw[flow] (\bus,3.45) -- (pe.west);
+
+% fusion -> c_t
+\node[draw=student!70!black, fill=student!25, rounded corners=2pt, line width=0.5pt,
+  minimum width=0.42cm, minimum height=2.75cm, inner sep=0pt]
+  (fuse) at (14.42,4.55) {};
+\node[font=\tiny, rotate=90] at (fuse) {Fusion};
+\draw[flow] (vt.east) -- (fuse.west |- vt.east);
+\draw[flow] (zs.east) -- (fuse.west |- zs.east);
+\draw[flow] (pe.east) -- (fuse.west |- pe.east);
+
+\node[inner sep=0pt] (ct) at (15.13,4.65)
+  {\includegraphics[height=1.3cm,page=3]{figures/pipeline/latent_vector.pdf}};
+\node[lbl, above=0pt of ct] {$\mathbf c_t$ (256)};
+\draw[flow] (fuse.east) -- (ct.west);
+
+% action branch: chunks sampled into the flow field of the velocity network
+\node[inner sep=0pt] (field) at (11.2,1.8)
+  {\includegraphics[width=4.75cm]{figures/pipeline/flow_field.pdf}};
+\draw[flow] (data.south) -- node[lbl, left, pos=0.45]{$\mathbf U_t^D$}
+  (data.south |- field.north);
+
+\node[box=student, fill=student!22, text width=1.2cm] (tf) at (14.95,2.0)
+  {\textbf{Flow model}\\$v_\theta$\\Transformer};
+\draw[flow] (ct.south) -- (ct.south |- tf.north);
+\draw[flow] (13.62,2.4) -- node[lbl, above]{$\mathbf U_t^\lambda$} (tf.west |- 0,2.4);
+\draw[flow] (tf.west |- 0,1.8) -- node[lbl, below]{$v_\theta$} (13.62,1.8);
+
+\node[box=student, text width=1.2cm] (loss) at (14.95,0.7)
+  {$\mathcal L(\theta)$\\$\mathbf U_t^D-\mathbf U_t^0$};
+\draw[flow] (tf.south) -- (loss.north);
+
+% ---------------------------------------------------------------- panel 4
+\node[draw=ink!40, inner sep=0pt] (real) at (17.05,4.75)
+  {\includegraphics[width=2.05cm,trim=80 120 60 60,clip]
+  {figures/teaser/InitialPose2.jpg}};
+
+\node[box=realred, text width=1.9cm] (dep) at (17.05,2.2)
+  {$v_{\bar\theta}$, 16 ODE steps\\[2pt]
+   $\widehat{\mathbf U}_t\in\mathbb R^{8\times 9}$\\[1pt]Cartesian ctrl.};
+\draw[flow] ($(dep.north)+(-0.4,0)$) -- node[lbl, left]{act} ($(real.south)+(-0.4,0)$);
+\draw[flow] ($(real.south)+(0.4,0)$) -- node[lbl, right]{depth} ($(dep.north)+(0.4,0)$);
+\node[lbl, text width=2.2cm] at (17.05,0.75)
+  {student controls every phase,\\no teacher, no human};
+
+% ---------------------------------------------------------------- stage links
+\draw[bigflow] (piT.east) -- (3.85,0.6) |- (turn.west);
+\draw[bigflow] (dsim.east) -- (8.65,5.0) |- (data.west);
+\draw[line width=1.4pt, draw=ink!75] (dreal.east) -| (8.65,5.0);
+\draw[bigflow] (tf.east) -- (dep.west);
+\end{tikzpicture}
+\end{document}

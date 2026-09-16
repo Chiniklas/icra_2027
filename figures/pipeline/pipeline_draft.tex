@@ -1,0 +1,177 @@
+% Rough draft of the full-width pipeline figure (fig:pipeline).
+% Paths are relative to the repository root. Rebuild from the root:
+%   pdflatex -output-directory=<tmp> figures/pipeline/pipeline_draft.tex
+%   pdftoppm -png -r 250 -singlefile <tmp>/pipeline_draft.pdf figures/pipeline/pipeline_draft
+\documentclass[class=ieeeconf,letterpaper,10pt,conference,border=2pt,tikz]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm,graphicx}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+
+\definecolor{simblue}{HTML}{2E6FD0}
+\definecolor{realred}{HTML}{D9224C}
+\definecolor{script}{HTML}{E07B00}
+\definecolor{student}{HTML}{2A8C5F}
+\definecolor{ink}{HTML}{333333}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\scriptsize, x=1cm, y=1cm,
+  panel/.style={draw=#1!55, fill=#1!4, rounded corners=4pt, line width=0.6pt},
+  ptitle/.style={font=\footnotesize\bfseries, text=#1!80!black},
+  box/.style={draw=#1!70!black, fill=#1!10, rounded corners=2pt, align=center,
+    inner sep=2.5pt, line width=0.5pt},
+  flow/.style={-{Latex[length=1.6mm]}, line width=0.7pt, draw=ink},
+  bigflow/.style={-{Latex[length=2.4mm]}, line width=1.4pt, draw=ink!75},
+  lbl/.style={font=\tiny, text=ink, align=center},
+]
+
+% ---------------------------------------------------------------- panels
+\draw[panel=simblue] (0,0) rectangle (3.9,6.7);
+\draw[panel=gray]    (4.2,0) rectangle (9.0,6.7);
+\draw[panel=student] (9.3,0) rectangle (15.3,6.7);
+\draw[panel=realred] (15.6,0) rectangle (18.2,6.7);
+
+\node[ptitle=simblue] at (1.95,6.42) {1\; Privileged Teacher};
+\node[ptitle=gray]    at (6.6,6.42) {2\; Hybrid-Teacher Demonstrations};
+\node[ptitle=student] at (12.3,6.42) {3\; Flow-Matching Distillation};
+\node[ptitle=realred] at (16.9,6.42) {4\; Deployment};
+
+% ---------------------------------------------------------------- panel 1
+\node (envs) at (1.95,5.3) {\includegraphics[width=3.6cm,trim=0 260 0 40,clip]
+  {figures/policy_visuals/teacher/threading_v2_teacher_120_podium.png}};
+\node[lbl, fill=white, fill opacity=0.8, text opacity=1, anchor=north west,
+  inner sep=1pt] at (envs.north west) {Isaac Lab, 512 envs};
+
+\node[box=simblue, text width=3.4cm] (thread) at (1.95,3.9)
+  {\textbf{Simplified thread model}\\[1pt]
+   $d_t^*-d_{b_k}=-\frac{\rho}{2\pi}(\theta_t-\theta_{b_k})$};
+
+\node[box=simblue, text width=1.5cm] (actor) at (0.95,2.65)
+  {\textbf{Actor}\\noisy obs.};
+\node[box=simblue, text width=1.5cm] (critic) at (2.95,2.65)
+  {\textbf{Critic}\\privileged};
+\node[box=simblue, text width=3.4cm] (ppo) at (1.95,1.6)
+  {LSTM actor--critic, PPO};
+\node[box=simblue, text width=3.4cm, fill=simblue!22] (piT) at (1.95,0.6)
+  {\textbf{Turning policy} $\bar\pi_T$\\M24 / M30 / M36};
+
+\draw[flow] (envs.south) -- (thread.north);
+\draw[flow] (thread.south -| actor) -- (actor.north);
+\draw[flow] (thread.south -| critic) -- (critic.north);
+\draw[flow] (actor.south) -- (actor.south |- ppo.north);
+\draw[flow] (critic.south) -- (critic.south |- ppo.north);
+\draw[flow] (ppo.south) -- (piT.north);
+
+% ---------------------------------------------------------------- panel 2
+% phase machine of the hybrid teacher
+\def\R{0.78}
+\coordinate (cyc) at (5.75,5.0);
+\foreach \a/\b in {78/12, -12/-78, -102/-168, 168/102}
+  \draw[line width=0.8pt, draw=ink!55, -{Latex[length=1.5mm]}]
+    ($(cyc)+(\a:\R)$) arc (\a:\b:\R);
+\node[font=\footnotesize] at (cyc) {$\pi_E$};
+\node[box=simblue, fill=simblue!22] (turn) at ($(cyc)+(90:\R)$) {Turn $\bar\pi_T$};
+\node[box=script, font=\tiny] (rel)  at ($(cyc)+(0:\R)$)   {Release};
+\node[box=script, font=\tiny] (ret)  at ($(cyc)+(-90:\R)$) {Return};
+\node[box=script, font=\tiny] (reen) at ($(cyc)+(180:\R)$) {Re-engage};
+\node[lbl] at ($(cyc)+(0,-1.2)$) {scripted transitions, nut not reset};
+
+\node (dsim) at (8.1,5.0) {\includegraphics[width=1.45cm]
+  {figures/datasets/dataset_sim.png}};
+\node[lbl, below=-1pt of dsim] {sim rollouts};
+\draw[flow] (rel.east) -- (dsim.west |- rel.east);
+
+% real-world replay with human intervention
+\node[draw=ink!40, inner sep=0pt] (robot) at (5.1,2.05)
+  {\includegraphics[width=1.2cm,trim=100 250 200 250,clip]
+  {figures/teaser/InitialPose1.jpg}};
+\node[lbl, below=1pt of robot] {real replay};
+\node (dreal) at (8.1,2.05) {\includegraphics[width=1.45cm]
+  {figures/datasets/dataset_real.png}};
+\node[box=realred, text width=1.7cm] (human) at (6.6,2.85)
+  {\textbf{Human} $\pi_H$\\corrects failures};
+\draw[flow] (8.1,4.12) -- (8.1,3.45) -| node[lbl, left, pos=0.75]{replay}
+  (robot.north);
+\draw[flow] (robot.east |- 0,2.05) -- (dreal.west |- 0,2.05);
+\draw[flow, draw=realred] (human.south) -- (human.south |- 0,2.1);
+
+\node[box=gray, text width=4.3cm, fill=gray!15] (data) at (6.6,0.6)
+  {\textbf{Offline dataset} $\mathcal D=\mathcal D_{\mathrm{sim}}\cup\mathcal D_{\mathrm{real}}$\\
+   observations + $H$-step action chunks};
+\draw[flow] (dreal.south) -- (dreal.south |- data.north);
+
+% ---------------------------------------------------------------- panel 3
+\node[draw=ink!40, inner sep=0pt] (view) at (10.0,5.3)
+  {\includegraphics[width=1.1cm,trim=560 60 560 280,clip]
+  {figures/policy_visuals/student/no_robot_randomization/view_01.png}};
+\node[lbl, below=1pt of view] {depth $\mathbf D_t$\\randomized};
+
+\begin{scope}[shift={(11.4,5.3)}]
+  \pgfmathsetseed{7}
+  \foreach \i in {1,...,110} {
+    \pgfmathsetmacro{\px}{0.4*rand}
+    \pgfmathsetmacro{\py}{0.4*rand}
+    \fill[student!70!black] (\px,\py) circle (0.022);
+  }
+\end{scope}
+\node[lbl] at (11.4,4.72) {$\mathcal P_t$, 4096 pts};
+\draw[flow] (view.east) -- (10.92,5.3);
+
+\node[trapezium, trapezium angle=70, shape border rotate=270, draw=student!70!black,
+  fill=student!12, minimum height=0.75cm, inner sep=1pt, font=\tiny]
+  (pnet) at (12.75,5.3) {PointNet};
+\draw[flow] (11.88,5.3) -- (pnet.west);
+
+\node[box=student] (st) at (11.4,3.95) {$\mathbf s_t,\ p_t,\ \mathbf e_{m_t}$};
+\node[box=student, fill=student!22, text width=1.0cm] (fuse) at (14.5,3.95)
+  {$\mathbf c_t$\\256-D};
+\draw[flow] (pnet.east) -| node[lbl, above, pos=0.3]{$\mathbf v_t$ (64-D)} (fuse.north);
+\draw[flow] (st.east) -- node[lbl, above]{MLP} (fuse.west);
+
+% flow-matching transport sketch
+\begin{scope}[shift={(9.65,1.95)}]
+  \pgfmathsetseed{3}
+  \foreach \i in {1,...,22} {
+    \pgfmathsetmacro{\py}{0.5*rand}
+    \fill[ink!45] (0.08+0.07*rand,\py) circle (0.025);
+  }
+  \foreach \s/\c in {-0.42/25,-0.2/45,0.02/65,0.25/45,0.46/25} {
+    \draw[student!\c!ink!60, line width=0.5pt]
+      (0.1,\s) .. controls (0.6,\s) and (0.7,0.1) .. (1.2,0.05);
+  }
+  \draw[student!80!black, line width=1.2pt]
+    (1.2,0.05) .. controls (1.35,0.3) and (1.45,-0.2) .. (1.58,0.1);
+  \node[lbl] at (0.1,0.78) {$\mathbf U_t^0\!\sim\!\mathcal N$};
+  \node[lbl] at (1.4,0.78) {$\mathbf U_t^D$};
+\end{scope}
+
+\node[box=student, fill=student!22, text width=1.7cm] (tf) at (13.0,1.95)
+  {\textbf{Transformer} $v_\theta$\\4 layers, 8 heads};
+\draw[flow] (11.35,1.95) -- node[lbl, below]{$\mathbf U_t^\lambda,\lambda$} (tf.west);
+\draw[flow] (fuse.south) |- ($(tf.north)+(0,0.4)$) -- (tf.north);
+
+\node[box=student, text width=1.0cm] (loss) at (14.65,1.95)
+  {$\mathcal L(\theta)$\\flow match.};
+\draw[flow] (tf.east) -- (loss.west);
+
+\draw[flow] (data.east) -- (10.45,0.6) -- node[lbl, right, pos=0.4]{sample} (10.45,1.35);
+\node[lbl, text=student!60!black] at (14.2,0.6) {EMA student $v_{\bar\theta}$};
+
+% ---------------------------------------------------------------- panel 4
+\node[draw=ink!40, inner sep=0pt] (real) at (16.9,4.75)
+  {\includegraphics[width=2.3cm,trim=80 120 60 60,clip]
+  {figures/teaser/InitialPose2.jpg}};
+
+\node[box=realred, text width=2.2cm] (dep) at (16.9,1.95)
+  {$v_{\bar\theta}$, 16 ODE steps\\[2pt]
+   $\widehat{\mathbf U}_t\in\mathbb R^{8\times 9}$\\[1pt]Cartesian controller};
+\draw[flow] ($(dep.north)+(-0.45,0)$) -- node[lbl, left]{act} ($(real.south)+(-0.45,0)$);
+\draw[flow] ($(real.south)+(0.45,0)$) -- node[lbl, right]{D415\\depth} ($(dep.north)+(0.45,0)$);
+\node[lbl, text width=2.4cm] at (16.9,0.6)
+  {student controls every phase,\\no teacher, no human};
+
+% ---------------------------------------------------------------- stage links
+\draw[bigflow] (piT.east) -- (4.05,0.6) |- (turn.west);
+\draw[bigflow] (loss.east) -- (dep.west);
+\end{tikzpicture}
+\end{document}

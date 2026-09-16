@@ -1,58 +1,81 @@
 % !TeX root = main.tex
+% Yet humans perform it with apparent ease by adapting their grasp to
+% the nut size and threading resistance: a loose nut can be spun with a single
+% finger, increasing reaction torque may prompt a switch to a pinch grasp, and a
+% large or tight nut may require a tripod or power grasp. This flexibility
+% requires continuous coordination of grasp selection, applied torque, and task
+% progress.
+
 Threading a nut onto a bolt is among the most difficult tasks in robotic
-assembly. Yet humans perform it with apparent ease by adapting their grasp to
-the nut size and threading resistance: a loose nut can be spun with a single
-finger, increasing reaction torque may prompt a switch to a pinch grasp, and a
-large or tight nut may require a tripod or power grasp. This flexibility
-requires continuous coordination of grasp selection, applied torque, and task
-progress.
+assembly because threaded engagement is notoriously contact-rich. On the one
+hand, the engaged threads can produce more than 1,000 simultaneous contact
+points, making faithful simulation prohibitively expensive for the large number
+of parallel rollouts required for reinforcement learning. Factory
+directly addresses this computational bottleneck through a combination of
+signed-distance-field (SDF) collision detection, contact reduction, and a
+Gauss--Seidel solver, enabling 1,000 parallel nut--bolt assemblies to be
+simulated in real time on a single GPU~\cite{narang2022factory}.
 
-Existing methods make dexterous screwing tractable by adding substantial
-structure to the problem. DexScrew replaces explicit thread geometry with a
-revolute-joint proxy to learn a rotational finger gait, then uses the learned
-skill to assist teleoperation and collect real-world demonstrations for tactile
-behavior cloning~\cite{dexscrew}. However, the resulting policy achieves only
-uncontrolled spinning: it sustains rotation but neither accepts a target
-rotation or thread position nor determines when that target has been reached.
-It therefore cannot terminate precisely, limiting its use in tasks such as
-turning a valve to a prescribed setting.
+On the other hand, depending on the task, humans perform nut threading in
+various ways. For simple spinning, a single finger is sufficient while the
+wrist remains fixed. A pinch grasp is preferred for controlled threading,
+whereas a tripod or even a power grasp may be applied in high-resistance
+scenarios.
 
-Play2Perfect addresses controlled screwing through a different form of task
-structure. It first learns a goal-conditioned dexterous manipulation prior
-on a rod shaped object, then fine-tunes it on a three-times-longer furniture leg using
-CAD-derived intermediate pose goals~\cite{play2perfect}. This formulation
-enables goal-directed screwing in a structured setting, but leaves open
-autonomous, long-horizon nut threading with realistic contact and coordinated
-arm--hand control.
+Prior work has typically approached the problem from the perspective of
+spinning. DexScrew uses a dexterous hand--arm setup similar to ours and replaces
+explicit thread geometry with a revolute-joint proxy to learn a rotational
+finger gait. The learned skill then assists teleoperation and supports the
+collection of real-world demonstrations for tactile behavior
+cloning~\cite{dexscrew}. However, its policy performs uncontrolled spinning
+without target conditioning or learned termination, leaving goal-directed,
+cyclic nut threading unresolved.
 
-We study controlled nut--bolt threading under moderate resistance, where a
-pinch grasp and coordinated arm--hand manipulation are required. The robot must
-repeatedly approach, grasp, rotate, release, return, and re-engage, making the
-task inherently cyclic and long-horizon. We first attempted to train a unified
-teacher policy for the complete multi-cycle task. In practice, however,
-designing rewards that capture both long-horizon progress and precise
-transitions between phases proved exceedingly difficult. We therefore adopt a
+Play2Perfect addresses controlled screwing through a specialized task
+formulation. It first learns a goal-conditioned dexterous manipulation prior
+on a rod-shaped object and then fine-tunes the prior on a furniture leg that is
+three times as long, using CAD-derived intermediate pose
+goals~\cite{play2perfect}. This formulation enables goal-directed screwing in a
+structured setting but does not address everyday threaded objects, such as nuts
+and bolts.
+
+We first attempted to approach the controlled threading problem for nuts and bolts
+by training a unified teacher policy for the complete
+multi-cycle task. In practice, however, designing rewards that capture both
+long-horizon progress and precise transitions between phases proved exceedingly
+difficult.
+
+Therefore, we formulate this problem as a long-horizon
+skill-chaining problem. The approach, grasp, rotate, goal-reaching, release, and return phases
+must be executed sequentially with precise handoffs. Our approach adopts a
 three-level hierarchy. At the lowest level, a learned teacher executes the
-elemental turning motion. At the middle level, scripted transitions chain these
-turns into complete simulated trajectories, which are corrected during
-real-world replay through human intervention. At the highest level, a student
-policy distills these demonstrations into a single deployable policy. We
-evaluate threading accuracy in both simulation and real-world experiments.
+elemental turning motion. At the middle level, scripted transition policies
+chain these turns into complete simulated trajectories, which are corrected
+through human intervention during real-world replay. At the highest level, a
+student policy distills these demonstrations into a single deployable
+visuomotor policy. We evaluate threading accuracy in both simulation and
+real-world experiments.
 
 The main contributions of this work are:
 \begin{itemize}
-  \item A reinforcement-learning pipeline for training a teacher policy that
-    operates across multiple nut sizes and rotates an already-engaged nut
-    \(60^\circ\) clockwise.
+  \item A hierarchical learning framework for long-horizon cyclic dexterous
+    manipulation that decomposes nut threading into a learned goal-conditioned
+    turning skill and structured transition behaviors, avoiding the difficulty
+    of training a monolithic policy over repeated contact-rich manipulation
+    cycles.
 
-  \item A hybrid teacher that combines the learned rotation policy with scripted
-    transition motions to generate long-horizon demonstrations. The teacher achieves 
-    perfect task completion in simulation; 
+  \item A hybrid-teacher demonstration framework that chains an RL-trained
+    dexterous manipulation policy with scripted release, return, and
+    re-engagement behaviors, enabling scalable generation of coherent
+    long-horizon demonstrations across repeated manipulation cycles.
 
-  \item A safedagger style human intervened real-world data-collection procedure that replaces
-    failed autonomous rollouts with human-guided corrections for fine-tuning.
+  \item A human-corrected sim-to-real data-augmentation strategy that
+    selectively replaces failure-prone segments during real-world replay with
+    corrective demonstrations, efficiently adapting simulated long-horizon
+    behaviors to real-world contact and perception discrepancies.
 
-  \item A visuomotor student-distillation pipeline that consolidates
-    long-horizon hybrid-teacher demonstrations and human corrections into a
-    single flow-matching policy with a DP3-inspired visual encoder.
+  \item A unified visuomotor policy distilled from heterogeneous long-horizon
+    demonstrations, combining 3D point-cloud observations with conditional
+    flow matching to execute all manipulation phases without privileged state,
+    scripted transitions, or human intervention at deployment.
 \end{itemize}

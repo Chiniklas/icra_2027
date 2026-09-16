@@ -32,7 +32,7 @@
 \overrideIEEEmargins
 
 % Project macros: rename the method once here and use \methodname throughout.
-\newcommand{\methodname}{SimThreadReal\xspace}
+\newcommand{\methodname}{NUTS\xspace}
 \newcommand{\figref}[1]{Fig.~\ref{#1}}
 \newcommand{\secref}[1]{Sec.~\ref{#1}}
 \newcommand{\tabref}[1]{Table~\ref{#1}}
@@ -44,8 +44,8 @@
 \icraanonymoustrue
 
 \title{\LARGE \bfseries
-  SimThreadReal: Learning Reactive Policies for Long-Horizon Cyclic Nut
-  Threading
+  NUTS: Learning Long-Horizon Cyclic Nut Threading via Hybrid-Teacher
+  Policy Distillation
 }
 
 \ificraanonymous
@@ -56,20 +56,21 @@
 \fi
 
 % Match the reference paper's page-one structure: title, a full-width teaser,
-% then the two-column abstract and introduction. Replace only the placeholder
-% drawing/caption when the paper's core story is settled.
+% then the two-column abstract and introduction.
 \newcommand{\teasercaption}{%
-  \textbf{Overview of \methodname.}
-  Teacher-policy rollouts, scripted resets, and human-corrected real-world
-  demonstrations form a long-horizon dataset for student-policy distillation
-  and cyclic visuomotor deployment.}
+  \textbf{Overview of \methodname,} a long-horizon task-policy distillation
+  framework trained offline on a mixed dataset combining simulated
+  demonstrations with human-guided real-world augmentation. The simulated
+  demonstrations use a policy-chaining recipe that combines an RL-trained
+  teacher policy with scripted transition policies periodically.}
 
 \makeatletter
 \let\icra@originalmaketitle\@maketitle
 \renewcommand{\@maketitle}{%
   \icra@originalmaketitle
   \begin{center}
-    \includegraphics[width=\linewidth]{figures/teaser_overview.png}
+    \includegraphics[width=\linewidth,trim=17bp 85bp 5bp 117bp,clip]{%
+      figures/SimThreadTeaser.pdf}
     \captionof{figure}{\teasercaption}
     \label{fig:teaser}
     \vspace{-0.12in}
@@ -87,24 +88,29 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Autonomous nut threading requires a robot to sustain contact-rich manipulation
-over repeated grasp, turn, release, and re-engagement cycles while remaining
-robust to sim-to-real discrepancies. We present \methodname, a hierarchical
-framework for learning this long-horizon behavior without training a single
-reinforcement-learning policy for the entire task. A privileged recurrent
-teacher first learns a goal-directed turning skill in a computationally
-efficient thread simulation that couples rotational and prismatic motion. We
-then combine the learned skill with scripted release and return motions to
-generate complete cyclic demonstrations. These trajectories are replayed on
-real hardware, where human interventions correct impending grasp failures,
-producing a fixed dataset of simulated and real-world demonstrations. Finally,
-we distill the dataset into one depth-conditioned visuomotor policy through
-conditional flow matching. The student uses a compact point-cloud encoder and
-a non-causal Transformer to predict eight-step chunks of unified Cartesian and
-finger commands. At deployment, the student controls every task phase without
-privileged state, scripted transitions, or human input. We evaluate the method
-across multiple nut sizes and held-out nut geometries in simulation and on a
-physical robot.
+Learning to perform controlled nut threading is one of the most challenging
+problems in robotic assembly. A policy must transition seamlessly among
+repetitive phases---including grasping, turning, goal reaching, releasing,
+returning, and resetting---to sustain consecutive threading cycles, making
+the task long-horizon and sensitive to policy-chaining errors. We present
+\methodname, a hierarchical
+policy-distillation framework for learning stable and accurate cyclic nut
+threading across multiple nut sizes. Rather than training a monolithic policy
+for the complete task, a privileged reinforcement-learning teacher first
+learns a goal-conditioned turning skill in simulation. We chain this skill
+with scripted transition behaviors to generate complete multi-cycle
+demonstrations. During real-world replays, human interventions selectively
+correct impending failures and augment the demonstrations.
+The resulting mixture of simulated and real-world demonstrations is used to
+distill a student policy through conditional flow matching (CFM). A
+DP3-inspired encoder converts RGB-D observations into point-cloud features
+used to predict eight-step action chunks. We evaluate the student policy in
+10-cycle trials using in-distribution M24, M30, and M36 hexagonal nuts and
+unseen rectangular, octagonal, and round nut geometries. For all
+in-distribution nuts, the policy completes all 10 cycles, with mean cyclic
+tracking errors below $6^\circ$ in magnitude. The policy also generalizes
+successfully to round and octagonal nuts with comparable error levels, but
+fails to generalize to rectangular nuts.
 \end{abstract}
 
 \section{Introduction}

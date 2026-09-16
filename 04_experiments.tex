@@ -138,13 +138,16 @@ feature, while keeping the policy, objective, data, and training budget fixed.
 
 \noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
 Using the same real-world-augmented dataset as ours, we replace the
-flow-matching Transformer with the DEXTRAH-style backbone---a layer-normalized
+flow-matching Transformer with the DEXTRAH~\cite{dextrahrgb}-style
+backbone---a layer-normalized
 512-unit LSTM followed by a 512--512--256 ELU MLP---trained using deterministic
 supervised action regression.
 
 \noindent\textbf{(d) DP3 Vision + Transformer Distillation.}
-The deterministic Transformer has four layers, eight attention heads, a 512-D
-hidden representation, 2048-D feed-forward layers, and eight learned queries
+Inspired by ACT's Transformer-based action-chunking
+design~\cite{zhao2023learning}, we use a deterministic variant without the
+CVAE objective. It has four layers, eight attention heads, a 512-D hidden
+representation, 2048-D feed-forward layers, and eight learned action queries
 that predict an eight-step action chunk.
 
 \noindent\textbf{(e) Ours with Only Simulated Data.}
@@ -158,18 +161,6 @@ demonstrations augmented with human-corrected real-world data.
 \subsection{Results}
 
 \input{table/maximum_cycle_count}
-
-\input{table/id_ood_comparison}
-
-\begin{figure}[H]
-  \centering
-  \resizebox{0.96\columnwidth}{!}{%
-    \input{figures/cycle_tracking_placeholder}}
-  \caption{Cycle-wise angular tracking error over ten threading cycles. The
-    final plot will report the mean and standard deviation over 10 trials for
-    each evaluated condition.}
-  \label{fig:cycle_tracking}
-\end{figure}
 
 To address \textbf{Q1}, we compare the single-cycle student (a) with our
 multi-cycle student (f). Our full method completes all 10 cycles in both
@@ -211,6 +202,8 @@ tests, completing all 10 cycles. In the real world, it achieves a cyclic
 tracking error of $-4.21^\circ$ with a standard deviation of $1.20^\circ$,
 slightly higher than in simulation.
 
+\input{table/id_ood_comparison}
+
 In \tabref{tab:id_ood_comparison}, we provide test data for the in-distribution
 M24, M30, and M36 hexagonal nuts, as well as the out-of-distribution octagonal,
 rectangular, and round nuts, to evaluate the generalization ability of our
@@ -224,10 +217,9 @@ sensitive.
 
 Across the tested out-of-distribution nut shapes, interestingly, the round nut
 achieves the best performance, followed by the octagonal nut, in terms of both
-mean cyclic tracking error and ten-cycle tracking error. These two nuts even
-outperform the in-distribution M36 nut. The round nut's performance is likely
+mean cyclic tracking error and ten-cycle tracking error. The round nut's performance is likely
 due to our unique zigzagged-rim design, which enables smoother force
-transmission. The octagonal nut's performance is likely due to its similarity
+transmission and reduces slipping. The octagonal nut's performance is likely due to its similarity
 to the hexagonal nut, further indicating that our nut-turning strategy works
 more effectively with rounder shapes.
 

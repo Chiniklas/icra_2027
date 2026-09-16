@@ -10,11 +10,12 @@ Threading a nut onto a bolt is among the most difficult tasks in robotic
 assembly because threaded engagement is notoriously contact-rich. On the one
 hand, the engaged threads can produce more than 15,000 simultaneous contact
 points, making faithful simulation prohibitively expensive for the large number
-of parallel rollouts required for reinforcement learning. Factory
+of parallel rollouts required for reinforcement learning.
+Factory\cite{narang2022factory}
 directly addresses this computational bottleneck through a combination of
-signed-distance-field (SDF) collision detection, contact reduction, and a
+signed-distance-field (SDF)\cite{macklin2020local} collision detection, contact reduction, and a
 Gauss--Seidel solver, enabling 1,000 parallel nut--bolt assemblies to be
-simulated in real time on a single GPU~\cite{narang2022factory}.
+simulated in real time on a single GPU.
 
 On the other hand, depending on the task, humans perform nut threading in
 various ways. For simple spinning, a single finger is sufficient while the
@@ -23,19 +24,20 @@ whereas a tripod or even a power grasp may be applied in high-resistance
 scenarios.
 
 Prior work has typically approached the problem from the perspective of
-spinning. DexScrew uses a dexterous hand--arm setup similar to ours and replaces
+spinning. DexScrew\cite{dexscrew} uses a dexterous hand--arm setup similar to ours and replaces
 explicit thread geometry with a revolute-joint proxy to learn a rotational
 finger gait. The learned skill then assists teleoperation and supports the
-collection of real-world demonstrations for tactile behavior
-cloning~\cite{dexscrew}. However, its policy performs uncontrolled spinning
+collection of real-world demonstrations for tactile behavior cloning. However,
+its policy performs uncontrolled spinning
 without target conditioning or learned termination, leaving goal-directed,
 cyclic nut threading unresolved.
 
-Play2Perfect first pretrains a goal-conditioned manipulation prior through play
-on diverse objects and goals, then fine-tunes it for precise assembly tasks,
-including furniture-leg screwing~\cite{play2perfect}. This formulation enables
-goal-directed screwing in a structured setting but does not address everyday
-threaded objects, such as nuts and bolts.
+Play2Perfect\cite{play2perfect} builds on the goal-conditioned
+object-manipulation policy introduced by SimToolReal\cite{simtoolreal}. It
+pretrains this policy through play on diverse objects and goals, then fine-tunes
+it for precise assembly tasks, including screwing a rod-like furniture leg.
+This formulation enables goal-directed screwing in a structured setting but
+does not address everyday threaded objects, such as nuts and bolts.
 
 We first attempted to approach the controlled threading problem for nuts and bolts
 by training a unified teacher policy for the complete
@@ -43,10 +45,10 @@ multi-cycle task. In practice, however, designing rewards that capture both
 long-horizon progress and precise transitions between phases proved exceedingly
 difficult.
 
-This motivates our central design principle: decompose during data generation,
-unify during deployment. During data generation, a learned policy handles the
-contact-rich, goal-conditioned turning skill, while scripted transition
-controllers handle release, return, and re-engagement. We refer to the
+This motivates our central design principle: \textbf{decompose during data
+generation, unify during deployment}. During data generation, a learned policy handles
+approach, grasp, rotate, and goal reaching, while scripted transition
+controllers handle release-and-reset behaviors. We refer to the
 composition of the learned RL skill and scripted transition controllers as the
 hybrid teacher, while human intervention is used only during real-world replay
 to correct teacher trajectories under sim-to-real discrepancies. During
@@ -58,9 +60,9 @@ threading accuracy in both simulation and real-world experiments.
 The main contributions of this work are:
 \begin{itemize}
   \item A long-horizon cyclic nut-threading formulation and hybrid teacher that
-    combines RL-learned, goal-conditioned turning with scripted release, return,
-    and re-engagement, generating coherent long-horizon, multi-cycle demonstrations without a
-    monolithic RL teacher.
+    combines an RL policy for approach, grasp, rotation, and
+    goal reaching with scripted release-and-reset behaviors, generating coherent
+    long-horizon, multi-cycle demonstrations without a monolithic RL teacher.
 
   \item A human-corrected sim-to-real demonstration strategy that selectively
     replaces failure-prone segments during real-world replay, adapting
@@ -70,5 +72,6 @@ The main contributions of this work are:
     heterogeneous demonstrations into complete cyclic behavior without
     privileged state, scripted controllers, or human assistance at deployment.
     In real-world tests, it completes every 10-cycle trial on all training
-    sizes and unseen round and octagonal geometries.
+    sizes and geometrically compatible unseen round and octagonal profiles,
+    while exposing failure on the tested rectangular profiles.
 \end{itemize}

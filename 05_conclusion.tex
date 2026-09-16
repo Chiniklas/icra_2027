@@ -2,20 +2,22 @@
 
 \subsection{Conclusion}
 
-In this paper, we introduced a hybrid-expert construction that combines an RL-learned
-single-turn threading policy with scripted transition motions. This design
-mitigates policy-chaining errors that can destabilize long-horizon execution,
-enabling reliable cyclic demonstrations.
+We presented \methodname, a framework for learning long-horizon cyclic nut
+threading with dexterous hands. Rather than learning the entire task with a
+monolithic policy, \methodname decomposes demonstration generation into an
+RL-learned, goal-conditioned turning skill and scripted transition behaviors,
+while distilling the resulting long-horizon trajectories into a unified
+visuomotor policy for deployment. Human corrections during real-world replay
+further adapt the demonstration distribution to contact and perception
+discrepancies that are difficult to capture in simulation.
 
-Human intervention further contributes to dataset
-construction by shifting the demonstrated action distribution toward
-real-world-executable behaviors, substantially reducing the sim-to-real gap.
-
-Finally, pairing a DP3-style visual encoder with a conditional flow-matching
-action backbone captures both repetitive motion structure and subtle
-cycle-to-cycle initial-state drift. This combination enables sample-efficient
-imitation learning for long-horizon tasks spanning more than
-\SI{200}{\second} of wall-clock execution.
+Experiments show
+that the distilled policy reliably completes 10 consecutive threading cycles
+on all training-distribution nut sizes and transfers to unseen round and
+octagonal profiles, while rectangular profiles expose a limitation of the
+learned re-grasp strategy. These results suggest that structured behavior
+generation followed by unified policy distillation provides an effective
+approach to long-horizon, contact-rich dexterous manipulation.
 
 \subsection{Future Work}
 
@@ -36,9 +38,3 @@ the helical thread constraint, which admit only a narrow entry configuration
 for successful engagement. Future work will therefore focus on autonomous nut
 engagement, which we anticipate will require fine-grained fingertip-force
 feedback and tactile sensing.
-
-Moreover, the current pipeline is limited to
-common hexagonal and similarly compact, rounded nut profiles. Specialized
-geometries such as butterfly (wing) nuts, which may require different grasp
-and regrasp strategies, are not considered; extending the method to such nut
-families is another direction for future work.

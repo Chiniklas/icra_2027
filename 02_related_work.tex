@@ -7,13 +7,14 @@ peg-in-hole insertion, gear meshing, connector mating, screwdriving, and
 nut--bolt fastening. Classical systems rely on fixtures or specialized tools,
 whereas multi-fingered hands offer greater versatility but introduce
 high-dimensional control and complex contact dynamics. Learning-based systems
-have advanced assembly through scalable simulation~\cite{narang2022factory},
-force-guided contact search~\cite{noseworthy2025forge}, dexterous
-tool use~\cite{simtoolreal}, and reusable manipulation priors~\cite{play2perfect}.
-Closest to our work, DexScrew learns sustained rotation of an already engaged
-fastener from simplified simulation~\cite{dexscrew}. In contrast,
+include Factory\cite{narang2022factory} for scalable simulation,
+FORGE\cite{noseworthy2025forge} for force-guided contact search,
+SimToolReal\cite{simtoolreal} for dexterous tool use, and
+Play2Perfect\cite{play2perfect} for reusable manipulation priors. Closest to
+our work, DexScrew\cite{dexscrew} learns sustained rotation of an already
+engaged fastener from simplified simulation. In contrast,
 \methodname{} performs controlled, multi-cycle nut threading with coordinated
-turning, release, return, and re-engagement across multiple nut sizes.
+turning and release-and-reset behavior across multiple nut sizes.
 
 \textbf{Policy Chaining in Long-Horizon Tasks.}
 Training a single policy for a long-horizon task is challenging: small control
@@ -26,11 +27,11 @@ recurrent networks or Transformers. An alternative is to decompose the task
 into reusable skills and chain their policies. This decomposition reduces the
 burden on each individual policy but introduces a transition problem: the
 terminal states produced by one skill may fall outside the initial-state
-distribution of the next, causing failures at skill
-boundaries~\cite{lee2022adversarial}. Sequential Dexterity addresses this mismatch using
+distribution of the next, causing failures at skill boundaries. Adversarial
+Skill Chaining\cite{lee2022adversarial} regularizes terminal states to reduce
+this mismatch. Sequential Dexterity\cite{chen2023sequential} addresses it using
 a learned transition-feasibility function that fine-tunes adjacent dexterous
-policies, supports autonomous switching, and enables
-recovery~\cite{chen2023sequential}.
+policies, supports autonomous switching, and enables recovery.
 
 \textbf{Sim-to-Real Adaptation with Human Intervention.}
 The sim-to-real gap is a long-standing problem in robot learning: policies
@@ -38,27 +39,29 @@ trained in simulation encounter mismatches in perception, dynamics, contact,
 and control when deployed on physical hardware. These discrepancies become
 increasingly consequential for high-dimensional, contact-rich dexterous
 manipulation. Most approaches seek robust zero-shot transfer through domain
-randomization~\cite{tobin2017domain} or domain
-adaptation~\cite{wilcox2025adapt3r}, while others use limited real-world data
-to fine-tune or augment a simulation-trained policy~\cite{jiang2025transic}.
-DAgger aggregates expert labels on states visited by the learner, whereas
-SafeDAgger reduces expert queries by requesting supervision only when the
-learned policy is predicted to be unsafe~\cite{ross2011reduction,
-zhang2016safedagger}. Similarly, during real-world hybrid-teacher replay, we
+randomization~\cite{tobin2017domain} or domain adaptation through
+Adapt3R\cite{wilcox2025adapt3r}, while methods such as
+TRANSIC\cite{jiang2025transic} use limited real-world data to adapt a
+simulation-trained policy. DAgger\cite{ross2011reduction} aggregates expert
+labels on states visited by the learner, whereas
+SafeDAgger\cite{zhang2016safedagger} reduces expert queries by requesting
+supervision only when the learned policy is predicted to be unsafe. Similarly,
+during real-world hybrid-teacher replay, we
 replace anticipated slip or misalignment failures with human corrections and
 add the corrected trajectories to the student-distillation dataset.
 
 \textbf{Visuomotor Policy Distillation.}
-Teacher--student distillation provides a practical route from policies trained
-with privileged simulator state to deployable policies that act from onboard
-sensing~\cite{chen2020cheating}. In dexterous manipulation, DextrAH-RGB
-distills a privileged reinforcement-learning teacher into an end-to-end visual
-grasping policy~\cite{dextrahrgb}, while UniGraspTransformer consolidates
-object-specific teacher policies into a unified student~\cite{wang2025unigrasp}.
+Learning by Cheating\cite{chen2020cheating} demonstrates a practical route from
+policies trained with privileged simulator state to deployable policies that
+act from onboard sensing. In dexterous manipulation,
+DextrAH-RGB\cite{dextrahrgb} distills a privileged reinforcement-learning
+teacher into an end-to-end visual grasping policy, while
+UniGraspTransformer\cite{wang2025unigrasp} consolidates object-specific teacher
+policies into a unified student.
 For long-horizon tasks, predicting action sequences improves temporal
 consistency, while generative models can represent multiple valid behaviors.
-Diffusion Policy models multimodal action sequences through iterative
-denoising~\cite{chi2023diffusion}. Flow matching instead learns a continuous
-vector field for efficient ODE-based action
-generation~\cite{lipman2023flow,black2024pi0}. These properties motivate its use for
+Diffusion Policy\cite{chi2023diffusion} models multimodal action sequences
+through iterative denoising. Flow Matching\cite{lipman2023flow} instead learns a
+continuous vector field for efficient ODE-based action generation, as adopted
+by $\pi_0$\cite{black2024pi0}. These properties motivate its use for
 distilling our hybrid-teacher and human-corrected demonstrations.

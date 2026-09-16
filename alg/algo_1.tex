@@ -2,10 +2,13 @@
   \caption{Offline flow distillation with human intervention}
   \label{alg:method}
   \begin{algorithmic}[1]
-    \REQUIRE Hybrid expert $\pi_E$, human operator $\pi_H$, horizon $H$
-    \STATE Collect simulated rollouts $\mathcal D_{\mathrm{sim}}$ using $\pi_E$
-    \STATE Replay them in the real world, overwriting failed segments with
-      $\pi_H$ to obtain $\mathcal D_{\mathrm{real}}$
+    \REQUIRE Hybrid teacher $\pi_{\mathrm{HT}}$, human operator $\pi_H$,
+      horizon $H$
+    \STATE Collect simulated rollouts $\mathcal D_{\mathrm{sim}}$ using
+      $\pi_{\mathrm{HT}}$
+    \STATE Replay them in the real world, overwriting failure-prone
+      grasp-to-release segments with $\pi_H$ to obtain
+      $\mathcal D_{\mathrm{real}}$
     \STATE Form $H$-step chunks from
       $\mathcal D=\mathcal D_{\mathrm{sim}}\cup\mathcal D_{\mathrm{real}}$
     \REPEAT

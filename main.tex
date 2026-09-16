@@ -12,9 +12,10 @@
 \usepackage{algorithm,algorithmic}
 \usepackage{booktabs,colortbl,multirow,tabularx}
 \usepackage{capt-of}
-\usepackage{cite}
+\usepackage[noadjust]{cite}
 \usepackage{graphicx}
 \usepackage{microtype}
+\usepackage{needspace}
 \usepackage{siunitx}
 \usepackage{tikz}
 \usepackage{xcolor}
@@ -59,12 +60,13 @@
 % then the two-column abstract and introduction.
 \newcommand{\teasercaption}{%
   \textbf{Overview of \methodname---decompose during data collection, unify at
-  deployment.} During data collection, an RL-learned turning skill and
-  scripted transition controllers form a hybrid teacher that cyclically
-  alternates between them to generate long-horizon threading demonstrations,
-  while human corrections augment real-world replays to address the sim-to-real
-  gap. Policy distillation then unifies these demonstrations into a single
-  visuomotor policy that executes the complete cyclic task at deployment.}
+  deployment.} During data collection, an RL policy executes approach, grasp,
+  rotate, and goal reaching, while scripted controllers execute release and
+  return\&reset; together, they form a hybrid teacher for generating
+  long-horizon threading demonstrations. Human corrections augment real-world
+  replays to address the sim-to-real gap. Policy distillation then unifies these
+  demonstrations into a single visuomotor policy that executes the complete
+  cyclic task at deployment.}
 
 \makeatletter
 \let\icra@originalmaketitle\@maketitle
@@ -90,28 +92,30 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Long-horizon cyclic nut threading combines contact-rich turning with reliable
-release, return, and re-engagement transitions. We found that training a
-single reinforcement-learning policy end to end across all of these phases
-makes long-horizon reward design and stable phase transitions difficult.
+Learning controlled nut threading is one of the most challenging problems in
+robotic assembly. Repetitive phases---including grasping, turning, goal
+reaching, and release-and-reset---must transition seamlessly to sustain
+consecutive threading cycles, making the task long-horizon and sensitive to
+errors at phase boundaries. We found that learning all phases end to end with a
+single reinforcement-learning policy makes long-horizon reward shaping and
+training difficult.
 We therefore present \methodname, which follows a simple principle: decompose
-during data generation, unify during deployment. A privileged RL policy learns
-only goal-conditioned turning, while scripted controllers execute the
-transition phases; together, they form a hybrid teacher that generates
-complete multi-cycle demonstrations. During real-world replay, human
-interventions correct impending failures caused by sim-to-real discrepancies
-and augment the offline dataset. We then use conditional flow matching to
-distill the simulated and human-corrected demonstrations into a single
-visuomotor student. A DP3-inspired encoder converts RGB-D observations into
-point-cloud features used to predict eight-step action chunks. At deployment,
-the student executes the complete cyclic task without privileged state,
-scripted controllers, or human intervention. We evaluate the student policy in
+during data generation, unify during deployment. A hybrid teacher combines a
+privileged RL policy for approach through goal reaching with scripted
+release-and-reset behaviors to generate complete multi-cycle demonstrations.
+Sparse human corrections augment real-world replays to reduce the sim-to-real
+gap. We distill the combined data into a single conditional
+flow-matching visuomotor student that predicts eight-step action chunks from
+point-cloud features converted from RGB-D observations and executes the full task autonomously.
+We evaluate the student policy in
 10-cycle trials using in-distribution M24, M30, and M36 hexagonal nuts and
 unseen rectangular, octagonal, and round nut geometries. For all
 in-distribution nuts, the policy completes all 10 cycles, with mean cyclic
-tracking errors below $6^\circ$ in magnitude. The policy also generalizes
-successfully to round and octagonal nuts with comparable error levels, but
-fails to generalize to rectangular nuts.
+tracking errors below $6^\circ$ in magnitude. Generalization is geometry dependent:
+the policy completes all 10 cycles on the round and octagonal
+profiles with comparable errors, but barely succeeds on rectangular profiles,
+indicating a limitation when test geometry does not support the learned
+grasping skill.
 \end{abstract}
 
 \section{Introduction}
@@ -120,6 +124,8 @@ fails to generalize to rectangular nuts.
 
 \section{Related Work}
 \label{sec:related_work}
+% Declare the two-column method overview early so it appears one page sooner.
+\input{figures/main_pipeline_figure}
 \input{02_related_work}
 
 \section{Problem Statement and Method}

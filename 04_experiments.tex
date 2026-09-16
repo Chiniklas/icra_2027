@@ -2,8 +2,8 @@
 \subsection{Evaluation Metrics}
 
 We evaluate each condition over $N=10$ trials, with up to ten cycles per trial.
-Each cycle consists of a $60^\circ$ clockwise turn followed by release, return,
-and re-engagement.
+Each cycle consists of a $60^\circ$ clockwise turn followed by the
+release-and-reset behavior.
 
 \paragraph{Mean Completed Cycle Count}
 For trial $i$, $C_i\in\{0,1,\ldots,10\}$ counts completed cycles before
@@ -37,18 +37,19 @@ Hand RH56DFX using Isaac Sim~5.1.0 and Isaac Lab~2.2.1. The 9-D action space
 encodes a six-DoF Cartesian-controller target and three index--thumb joint
 commands. At
 \SI{15}{Hz},
-the student converts a calibrated $320\times180$ depth image into 4096 cropped
-points and fuses a 64-dimensional DP3 feature with proprioception, progress,
+the student converts each RGB-D observation into a point cloud for further
+processing and fuses a 64-dimensional DP3 feature with proprioception, progress,
 and phase; physics runs at \SI{120}{Hz}. For the retained M24 run, we train the
 PPO teacher for 200 epochs in 512 environments. Using only 20 successful
 ten-cycle demonstrations (19,486 frames) collected from 32 environments, we
 increase trajectory diversity by applying 30 random arm impulses to each
-demonstration. We train the flow-matching student for 300 epochs using
-eight-step action chunks.
+demonstration. On a single NVIDIA GeForce RTX 5090, training one teacher policy
+takes approximately 10 hours, while student-policy training takes approximately
+30 minutes.
 
-% SUBMISSION-BLOCKER: Validate and report the GPU model, wall-clock training times,
-% domain-randomization ranges, initialization distributions, and the final
-% multi-object training/data budgets used for the paper.
+% SUBMISSION-BLOCKER: Validate and report domain-randomization ranges,
+% initialization distributions, and the final multi-object training/data
+% budgets used for the paper.
 
 \begin{figure}[t]
   \centering
@@ -88,9 +89,16 @@ eight-step action chunks.
   \label{fig:simulation_scene}
 \end{figure}
 
+\Needspace{7\baselineskip}
+For real-world augmentation, 12 of the 20 replays ($60\%$) contain at least one
+human correction. Human-overwritten grasp-to-release segments comprise only
+$6.48\%$ of replay frames; the remaining $93.52\%$ retain hybrid-teacher
+actions, showing that intervention is temporally sparse. We train the
+flow-matching student for 300 epochs using eight-step action chunks.
+
 The physical platform comprises the same FR3 arm and Inspire Hand RH56DFX. An
-Intel RealSense D415 supplies the depth stream, which we downsample to
-$320\times180$ before point-cloud conversion and student inference. Robot
+Intel RealSense D415 supplies the RGB-D observations, which are converted into
+point clouds before student inference. Robot
 commands use the same Cartesian controller as in simulation. In real-world
 deployment, the flow-matching policy uses a prediction horizon of eight and 16
 ODE integration steps. Teacher and student training use only hexagonal nuts.
@@ -101,19 +109,6 @@ out-of-distribution evaluation.
 % SUBMISSION-BLOCKER: Validate and report the control and policy frequencies, camera
 % calibration/resolution/frame rate, workspace and safety limits, trial counts,
 % initialization distributions, and success/failure criteria.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.495\columnwidth]{figures/hardware_setup_annotated.png}%
-  \hfill
-  \includegraphics[width=0.495\columnwidth]{figures/NutBoltHolderFamilyOnly2_annotated.png}
-  \caption{Real-world evaluation platform and test-object family. The setup
-    (left) comprises a Franka Research 3 arm, an Inspire Hand RH56DFX, and an
-    Intel RealSense D415 depth camera. The object set (right) contains M24,
-    M30, and M36 nuts with hexagonal, octagonal, rectangular, and round
-    geometries, together with their corresponding bolts and holders.}
-  \label{fig:hardware_family}
-\end{figure}
 
 \subsection{Ablations}
 
@@ -142,14 +137,14 @@ feature, while keeping the policy, objective, data, and training budget fixed.
 
 \noindent\textbf{(c) DP3 Vision + LSTM Distillation.}
 Using the same real-world-augmented dataset as ours, we replace the
-flow-matching Transformer with the DEXTRAH-RGB~\cite{dextrahrgb}-style
+flow-matching Transformer with the DEXTRAH-RGB\cite{dextrahrgb}-style
 backbone---a layer-normalized
 512-unit LSTM followed by a 512--512--256 ELU MLP---trained using deterministic
 supervised action regression.
 
 \noindent\textbf{(d) DP3 Vision + Transformer Distillation.}
-Inspired by ACT's Transformer-based action-chunking
-design~\cite{zhao2023learning}, we use a deterministic variant without the
+Inspired by the Transformer-based action-chunking design of
+ACT\cite{zhao2023learning}, we use a deterministic variant without the
 CVAE objective. It has four layers, eight attention heads, a 512-D hidden
 representation, 2048-D feed-forward layers, and eight learned action queries
 that predict an eight-step action chunk.
@@ -174,6 +169,17 @@ single-cycle-trained student slips off the edge of the nut after a few cycles,
 showing that (a) learns the basic threading skill but fails to follow the axial
 motion of the nut (\tabref{tab:m24_ablation}).
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.495\columnwidth]{figures/hardware_setup_annotated.png}%
+  \hfill
+  \includegraphics[width=0.495\columnwidth]{figures/NutBoltHolderFamilyOnly2_annotated.png}
+  \caption{Real-world setup (left) and test-object family (right), comprising
+    M24, M30, and M36 hexagonal, octagonal, rectangular, and round nuts with
+    corresponding bolts and holders.}
+  \label{fig:hardware_family}
+\end{figure}
+
 For \textbf{Q2}, we perform an ablation on the vision encoder using both DP3 and
 ResNet-18 backbones, while holding the policy, objective, data, and training
 budget fixed. A shared decoder is used to evaluate the prediction error of the
@@ -182,8 +188,10 @@ two encoded features. The DP3 encoder achieves a positional error of
 while ResNet-18 achieves a similar positional error of \SI{8.6}{\milli\meter}
 but a notably higher rotational error of $31.20^\circ$. Real-world conditions
 further amplify the difference, with ablation (f) completing all 10 cycles
-while ablation (b) completes only 1.1 cycles on average. We attribute this
-performance gap to overfitting to the first-cycle data
+while ablation (b) completes only 1.1 cycles on average. The substantially
+larger rotational prediction error of the ResNet representation suggests that
+image-space features are less effective at preserving the geometry required
+for repeated re-grasping under viewpoint and axial changes
 (\tabref{tab:m24_ablation}).
 
 Results from ablations (c), (d), and (f) show that the choice of student action
@@ -211,27 +219,27 @@ slightly higher than in simulation.
 
 In \tabref{tab:id_ood_comparison}, we provide test data for the in-distribution
 M24, M30, and M36 hexagonal nuts, as well as the out-of-distribution octagonal,
-rectangular, and round nuts, to evaluate the generalization ability of our
-method. The results show that our method can execute the task on the
-in-distribution training objects with impressive accuracy. Notably, the M30 nut
-achieves the best performance, with an average lag of $3.7^\circ$ per cycle and
-$37^\circ$ over the ten-cycle trial. The M36 nut achieves the worst performance
-due to its larger size, mainly because the sim-to-real gap is amplified by the
-penetration depth in the training environment, making deployment more
-sensitive.
+rectangular, and round nuts, to characterize geometry-dependent transfer. Our
+method completes the task on the in-distribution training objects.
+The M30 nut achieves the smallest lag, with an average of $3.7^\circ$ per cycle
+and $37^\circ$ over the ten-cycle trial. The M36 hexagonal nut has the largest
+lag among the in-distribution sizes. We hypothesize that its larger geometry
+increases sensitivity to simulation-model errors, including penetration-depth
+mismatch; however, our experiments do not isolate this factor.
 
 Interestingly, among the tested out-of-distribution nut shapes, the round nut
 achieves the best performance, followed by the octagonal nut, in terms of both
-mean cyclic tracking error and ten-cycle tracking error. The round nut's performance is likely
-due to our unique zigzagged-rim design, which enables smoother force
-transmission and reduces slipping. The octagonal nut's performance is likely due to its similarity
-to the hexagonal nut, further indicating that our nut-turning strategy works
-more effectively with rounder shapes.
+mean cyclic tracking error and ten-cycle tracking error. Because we do not
+ablate individual geometry factors, we do not attribute this ranking to a
+specific geometric property.
 
 In contrast, the current policy performs poorly on the rectangular nut. A
 common failure mode occurs after the nut is turned $60^\circ$
-clockwise: in the next cycle, the fingers are unable to establish contact with
-the next pair of faces due to the rectangular shape, causing the nut to become
-stuck at the first $60^\circ$ position. A smaller nut such as the M24 can escape
+clockwise: in the next cycle, the fingers fail to establish contact with the
+next pair of faces, leaving the nut stuck at the first $60^\circ$ position. A
+smaller nut such as the M24 can escape
 this failure mode by chance, but it survives for only another two cycles before
-the mismatched policy completely fails.
+the mismatched policy completely fails. Together, these results suggest that
+transfer is strong when an unseen profile preserves cyclic re-grasp
+configurations compatible with training, but degrades sharply when its face
+topology conflicts with the learned re-grasp strategy.
